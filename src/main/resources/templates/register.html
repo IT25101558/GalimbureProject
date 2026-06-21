@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <style>
+        :root {
+            --ink: #1d2a2e;
+            --muted: #617276;
+            --line: #cbd7d9;
+            --panel: #ffffff;
+            --field: #f8fbfb;
+            --accent: #0d6b63;
+            --accent-strong: #084d48;
+            --danger: #b42318;
+            --success: #146c43;
+            --wash: #e7f0ee;
+            --sun: #f6c453;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+            background:
+                    linear-gradient(135deg, rgba(13, 107, 99, 0.12), rgba(246, 196, 83, 0.14)),
+                    repeating-linear-gradient(90deg, rgba(29, 42, 46, 0.04) 0, rgba(29, 42, 46, 0.04) 1px, transparent 1px, transparent 72px),
+                    var(--wash);
+        }
+
+        main {
+            display: grid;
+            min-height: 100vh;
+            place-items: center;
+            padding: 40px 18px;
+        }
+
+        .register-shell {
+            display: grid;
+            width: min(980px, 100%);
+            grid-template-columns: 0.85fr 1.15fr;
+            overflow: hidden;
+            border: 1px solid rgba(29, 42, 46, 0.14);
+            border-radius: 8px;
+            background: var(--panel);
+            box-shadow: 0 24px 70px rgba(29, 42, 46, 0.16);
+        }
+
+        .intro {
+            display: flex;
+            min-height: 100%;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 40px;
+            padding: 42px;
+            color: #f9f6ed;
+            background:
+                    linear-gradient(150deg, rgba(8, 77, 72, 0.96), rgba(13, 107, 99, 0.86)),
+                    linear-gradient(45deg, transparent 45%, rgba(246, 196, 83, 0.24) 45%, rgba(246, 196, 83, 0.24) 55%, transparent 55%);
+        }
+
+        .intro h1 {
+            margin: 0 0 16px;
+            font-size: clamp(2rem, 4vw, 4rem);
+            font-weight: 700;
+            line-height: 0.95;
+        }
+
+        .intro p {
+            max-width: 30ch;
+            margin: 0;
+            color: rgba(249, 246, 237, 0.84);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .badge {
+            width: fit-content;
+            border: 1px solid rgba(249, 246, 237, 0.38);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .form-panel {
+            padding: 42px;
+        }
+
+        .form-panel h2 {
+            margin: 0 0 6px;
+            font-size: 2rem;
+            line-height: 1.1;
+        }
+
+        .form-panel > p {
+            margin: 0 0 28px;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+        }
+
+        form {
+            display: grid;
+            gap: 18px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        label {
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--field);
+            color: var(--ink);
+            font: 1rem "Segoe UI", Verdana, sans-serif;
+            padding: 13px 14px;
+            transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+        }
+
+        textarea {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(13, 107, 99, 0.14);
+        }
+
+        .error {
+            color: var(--danger);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .alert {
+            border-radius: 6px;
+            padding: 13px 14px;
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.94rem;
+        }
+
+        .alert-success {
+            border: 1px solid rgba(20, 108, 67, 0.24);
+            background: rgba(20, 108, 67, 0.1);
+            color: var(--success);
+        }
+
+        button {
+            cursor: pointer;
+            border: 0;
+            border-radius: 6px;
+            background: var(--accent);
+            color: #ffffff;
+            font: 700 1rem "Segoe UI", Verdana, sans-serif;
+            padding: 14px 18px;
+            transition: background-color 160ms ease, transform 160ms ease;
+        }
+
+        button:hover {
+            background: var(--accent-strong);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 760px) {
+            main {
+                padding: 18px;
+            }
+
+            .register-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .intro,
+            .form-panel {
+                padding: 28px;
+            }
+
+            .intro {
+                gap: 26px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section class="register-shell" aria-label="Registration form">
+        <aside class="intro">
+            <div>
+                <div class="badge">New Account</div>
+                <h1>Register</h1>
+                <p>Create a user record and store it directly in the PostgreSQL database connected to this application.</p>
+            </div>
+            <p>Records are saved in the registered_users table.</p>
+        </aside>
+
+        <section class="form-panel">
+            <h2>Your Details</h2>
+            <p>Enter the user information below.</p>
+
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+            <form th:action="@{/register}" th:object="${registrationForm}" method="post">
+                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                <div class="field">
+                    <label for="fullName">Full name</label>
+                    <input id="fullName" type="text" th:field="*{fullName}" autocomplete="name" required>
+                    <span class="error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
+                </div>
+
+                <div class="field">
+                    <label for="email">Email address</label>
+                    <input id="email" type="email" th:field="*{email}" autocomplete="email" required>
+                    <span class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                </div>
+
+                <div class="field">
+                    <label for="phone">Phone number</label>
+                    <input id="phone" type="tel" th:field="*{phone}" autocomplete="tel" required>
+                    <span class="error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
+                </div>
+
+                <div class="field">
+                    <label for="address">Address</label>
+                    <textarea id="address" th:field="*{address}" autocomplete="street-address" required></textarea>
+                    <span class="error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input id="password" type="password" th:field="*{password}" autocomplete="new-password" required>
+                    <span class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                </div>
+
+                <button type="submit">Create account</button>
+            </form>
+        </section>
+    </section>
+</main>
+</body>
+</html>

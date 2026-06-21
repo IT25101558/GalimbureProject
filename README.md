@@ -23,8 +23,14 @@ Use the value from your Render PostgreSQL database connection settings. Do not p
 Recommended Render commands:
 
 ```bash
-./mvnw clean package -DskipTests
+bash ./mvnw clean package -DskipTests
 java -jar target/GalimbureProject-0.0.1-SNAPSHOT.jar
+```
+
+Set this environment variable on the Render Web Service:
+
+```text
+DATABASE_URL=your Render PostgreSQL Internal Database URL
 ```
 
 After deployment, open:

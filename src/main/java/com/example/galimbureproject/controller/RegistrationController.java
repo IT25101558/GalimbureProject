@@ -1,8 +1,19 @@
 package com.example.galimbureproject.controller;
 
 import com.example.galimbureproject.dto.RegistrationForm;
+import com.example.galimbureproject.model.RegisteredUser;
 import com.example.galimbureproject.service.RegistrationService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -15,18 +26,30 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class RegistrationController {
 
     private final RegistrationService registrationService;
+    private final AuthenticationManager authenticationManager;
+    private final SecurityContextRepository securityContextRepository;
 
-    public RegistrationController(RegistrationService registrationService) {
+    public RegistrationController(
+            RegistrationService registrationService,
+            AuthenticationManager authenticationManager,
+            SecurityContextRepository securityContextRepository
+    ) {
         this.registrationService = registrationService;
+        this.authenticationManager = authenticationManager;
+        this.securityContextRepository = securityContextRepository;
     }
 
     @GetMapping("/")
-    public String home() {
-        return "redirect:/register";
+    public String home(Authentication authentication) {
+        return isAuthenticated(authentication) ? "redirect:/dashboard" : "redirect:/login";
     }
 
     @GetMapping("/register")
-    public String showRegisterForm(Model model) {
+    public String showRegisterForm(Model model, Authentication authentication) {
+        if (isAuthenticated(authentication)) {
+            return "redirect:/dashboard";
+        }
+
         if (!model.containsAttribute("registrationForm")) {
             model.addAttribute("registrationForm", new RegistrationForm());
         }
@@ -37,20 +60,56 @@ public class RegistrationController {
     public String register(
             @Valid @ModelAttribute("registrationForm") RegistrationForm registrationForm,
             BindingResult bindingResult,
-            RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Authentication authentication
     ) {
+        if (isAuthenticated(authentication)) {
+            return "redirect:/dashboard";
+        }
+
         if (bindingResult.hasErrors()) {
             return "register";
         }
 
+        RegisteredUser registeredUser;
         try {
-            registrationService.register(registrationForm);
+            registeredUser = registrationService.register(registrationForm);
         } catch (IllegalArgumentException exception) {
             bindingResult.rejectValue("email", "email.exists", exception.getMessage());
             return "register";
         }
 
-        redirectAttributes.addFlashAttribute("successMessage", "Registration saved successfully.");
-        return "redirect:/register";
+        try {
+            Authentication authenticated = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            registeredUser.getEmail(),
+                            registrationForm.getPassword()
+                    )
+            );
+
+            request.getSession(true);
+            request.changeSessionId();
+
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authenticated);
+            SecurityContextHolder.setContext(context);
+            securityContextRepository.saveContext(context, request, response);
+
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Account created successfully. You are signed in."
+            );
+            return "redirect:/dashboard";
+        } catch (AuthenticationException exception) {
+            return "redirect:/login?registered";
+        }
+    }
+
+    private boolean isAuthenticated(Authentication authentication) {
+        return authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken);
     }
 }

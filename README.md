@@ -1,11 +1,14 @@
 # GalimbureProject
 
-Spring Boot registration page that saves user details into a PostgreSQL table.
+Spring Boot authentication app with registration, login, and a protected dashboard backed by PostgreSQL.
 
 ## What Was Added
 
-- `GET /register` shows the HTML registration form.
-- `POST /register` validates and saves the submitted user.
+- `GET /login` shows the custom login page for existing accounts.
+- `POST /login` is handled by Spring Security and returns the user to `/dashboard`.
+- `GET /register` shows the registration form.
+- `POST /register` validates, saves, and signs the new user in automatically.
+- `GET /dashboard` shows the protected dashboard after login or registration.
 - Data is saved into the `registered_users` PostgreSQL table.
 - Passwords are stored as BCrypt hashes.
 - The app reads the database connection from environment variables.
@@ -36,7 +39,7 @@ DATABASE_URL=your Render PostgreSQL Internal Database URL
 After deployment, open:
 
 ```text
-https://your-render-app-url/register
+https://your-render-app-url/login
 ```
 
 ## Local Run On Windows
@@ -70,7 +73,7 @@ If Maven says `No plugin found for prefix 'spring-boot'`, run the full plugin co
 Then open:
 
 ```text
-http://localhost:8080/register
+http://localhost:8080/login
 ```
 
 ## Table

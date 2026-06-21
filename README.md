@@ -35,13 +35,15 @@ https://your-render-app-url/register
 
 ## Local Run On Windows
 
-Set your database URL in the current terminal:
+Create a file named `.env` in the project root:
 
-```powershell
-$env:DATABASE_URL="postgres://username:password@hostname:5432/database_name"
+```text
+DATABASE_URL=postgres://username:password@hostname:5432/database_name
 ```
 
-If Java is not on your `PATH`, set `JAVA_HOME` first:
+Use the External Database URL from your Render PostgreSQL database when running on your computer.
+
+If Java is not on your `PATH`, set `JAVA_HOME` in the current terminal:
 
 ```powershell
 $env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-21.0.7.6-hotspot"

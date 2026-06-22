@@ -41,13 +41,13 @@ public class RegistrationController {
 
     @GetMapping("/")
     public String home(Authentication authentication) {
-        return isAuthenticated(authentication) ? "redirect:/dashboard" : "redirect:/login";
+        return redirectFor(authentication);
     }
 
     @GetMapping("/register")
     public String showRegisterForm(Model model, Authentication authentication) {
         if (isAuthenticated(authentication)) {
-            return "redirect:/dashboard";
+            return redirectFor(authentication);
         }
 
         if (!model.containsAttribute("registrationForm")) {
@@ -66,7 +66,7 @@ public class RegistrationController {
             Authentication authentication
     ) {
         if (isAuthenticated(authentication)) {
-            return "redirect:/dashboard";
+            return redirectFor(authentication);
         }
 
         if (bindingResult.hasErrors()) {
@@ -111,5 +111,18 @@ public class RegistrationController {
         return authentication != null
                 && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken);
+    }
+
+    private String redirectFor(Authentication authentication) {
+        if (isAdmin(authentication)) {
+            return "redirect:/admin-dashboard";
+        }
+        return isAuthenticated(authentication) ? "redirect:/dashboard" : "redirect:/login";
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return isAuthenticated(authentication)
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 }

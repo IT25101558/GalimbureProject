@@ -10,12 +10,20 @@ public class LoginController {
 
     @GetMapping("/login")
     public String showLoginPage(Authentication authentication) {
-        return isAuthenticated(authentication) ? "redirect:/dashboard" : "login";
+        return isAdmin(authentication)
+                ? "redirect:/admin-dashboard"
+                : isAuthenticated(authentication) ? "redirect:/dashboard" : "login";
     }
 
     private boolean isAuthenticated(Authentication authentication) {
         return authentication != null
                 && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken);
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return isAuthenticated(authentication)
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 }

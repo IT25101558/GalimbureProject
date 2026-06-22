@@ -188,6 +188,15 @@
             line-height: 1.25;
         }
 
+        .metric a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .metric a:hover {
+            text-decoration: underline;
+        }
+
         .details {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -254,6 +263,74 @@
             line-height: 1.6;
         }
 
+        .marks-panel {
+            padding: 26px;
+            display: grid;
+            gap: 18px;
+        }
+
+        .marks-header {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .marks-layout {
+            display: grid;
+            gap: 18px;
+        }
+
+        .chart-shell {
+            border: 1px solid rgba(19, 33, 38, 0.08);
+            border-radius: 12px;
+            background: rgba(247, 250, 251, 0.92);
+            padding: 14px;
+            aspect-ratio: 900 / 360;
+            min-height: 240px;
+        }
+
+        .chart-shell svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .chart-empty {
+            display: grid;
+            place-items: center;
+            min-height: 240px;
+            border: 1px dashed rgba(19, 33, 38, 0.16);
+            border-radius: 12px;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .marks-table table {
+            min-width: 560px;
+        }
+
+        .chart-caption {
+            margin: 0;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.5;
+        }
+
+        .metric-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(19, 33, 38, 0.12);
+            background: rgba(255, 255, 255, 0.8);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-weight: 700;
+        }
+
         @keyframes lift {
             from {
                 opacity: 0;
@@ -289,7 +366,8 @@
 
             .topbar,
             .hero-copy,
-            .details .panel {
+            .details .panel,
+            .marks-panel {
                 padding: 22px;
             }
         }
@@ -326,6 +404,10 @@
                     <strong>Active</strong>
                 </div>
                 <div class="metric">
+                    <span>Role</span>
+                    <strong th:text="${user.role != null ? user.role.name() : 'STUDENT'}">STUDENT</strong>
+                </div>
+                <div class="metric">
                     <span>Member since</span>
                     <strong th:text="${#temporals.format(user.createdAt, 'dd MMM yyyy')}">01 Jan 2026</strong>
                 </div>
@@ -336,6 +418,10 @@
                 <div class="metric">
                     <span>Contact email</span>
                     <strong th:text="${user.email}">user@example.com</strong>
+                </div>
+                <div class="metric" th:if="${isAdmin}">
+                    <span>Admin</span>
+                    <strong><a th:href="@{/admin-dashboard}">Open admin dashboard</a></strong>
                 </div>
             </aside>
         </section>
@@ -371,9 +457,203 @@
                 <div class="note">
                     If you want profile editing or admin features next, this dashboard is the right place to add them.
                 </div>
+                <div class="note" th:if="${isAdmin}">
+                    This account has administrator access and can manage user roles from the admin dashboard.
+                </div>
             </aside>
+        </section>
+
+        <section class="panel marks-panel">
+            <div class="marks-header">
+                <div>
+                    <h3 class="section-title">Weekly marks</h3>
+                    <p class="chart-caption">Weeks are shown horizontally and marks are shown vertically.</p>
+                </div>
+                <div class="metric-pill">
+                    <span>Entries</span>
+                    <strong th:text="${studentMarks.size()}">0</strong>
+                </div>
+            </div>
+
+            <div class="marks-layout" th:if="${hasMarks}">
+                <div class="chart-shell" aria-label="Weekly mark chart">
+                    <svg id="marks-chart" viewBox="0 0 900 360" role="img" aria-label="Weekly marks line chart"></svg>
+                </div>
+            </div>
+
+            <div class="chart-empty" th:if="${!hasMarks}">
+                No marks have been recorded yet.
+            </div>
+
+            <div class="table-wrap marks-table">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Batch</th>
+                        <th>Week</th>
+                        <th>Mark</th>
+                        <th>Saved</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="mark : ${studentMarks}">
+                        <td th:text="${mark.weekPlan != null and mark.weekPlan.batch != null ? 'Batch ' + mark.weekPlan.batch.batchYear : 'Batch -'}">Batch 2026</td>
+                        <td th:text="${mark.weekNumber}">1</td>
+                        <td th:text="${mark.mark}">80</td>
+                        <td th:text="${#temporals.format(mark.updatedAt != null ? mark.updatedAt : mark.createdAt, 'dd MMM yyyy')}">01 Jan 2026</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(studentMarks)}">
+                        <td colspan="4" class="muted">No marks available.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
     </section>
 </main>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    (() => {
+        const chart = document.getElementById('marks-chart');
+        if (!chart) {
+            return;
+        }
+
+        const labels = /*[[${markLabels}]]*/ [];
+        const marks = /*[[${markValues}]]*/ [];
+        if (!labels.length || !marks.length) {
+            return;
+        }
+
+        const width = 900;
+        const height = 360;
+        const padding = { top: 26, right: 24, bottom: 58, left: 58 };
+        const plotWidth = width - padding.left - padding.right;
+        const plotHeight = height - padding.top - padding.bottom;
+        const maxMark = 100;
+        const minMark = 0;
+        const svgNS = 'http://www.w3.org/2000/svg';
+
+        const make = (name, attributes = {}) => {
+            const element = document.createElementNS(svgNS, name);
+            Object.entries(attributes).forEach(([key, value]) => {
+                element.setAttribute(key, String(value));
+            });
+            return element;
+        };
+
+        const xForIndex = (index) => {
+            if (labels.length === 1) {
+                return padding.left + plotWidth / 2;
+            }
+            return padding.left + (index * plotWidth) / (labels.length - 1);
+        };
+
+        const yForMark = (value) => {
+            const clamped = Math.max(minMark, Math.min(maxMark, value));
+            return padding.top + ((maxMark - clamped) / (maxMark - minMark)) * plotHeight;
+        };
+
+        chart.innerHTML = '';
+        chart.appendChild(make('rect', {
+            x: padding.left,
+            y: padding.top,
+            width: plotWidth,
+            height: plotHeight,
+            rx: 10,
+            fill: '#ffffff',
+            stroke: '#d0dcde'
+        }));
+
+        [0, 20, 40, 60, 80, 100].forEach((tick) => {
+            const y = yForMark(tick);
+            chart.appendChild(make('line', {
+                x1: padding.left,
+                y1: y,
+                x2: padding.left + plotWidth,
+                y2: y,
+                stroke: tick === 0 ? '#9aa8ad' : '#d9e1e3',
+                'stroke-width': tick === 0 ? 1.4 : 1
+            }));
+            chart.appendChild(make('text', {
+                x: padding.left - 12,
+                y: y + 4,
+                'text-anchor': 'end',
+                fill: '#5b6d72',
+                'font-size': 12,
+                'font-family': 'Segoe UI, Verdana, sans-serif'
+            }));
+            const label = chart.lastChild;
+            label.textContent = String(tick);
+        });
+
+        chart.appendChild(make('line', {
+            x1: padding.left,
+            y1: padding.top,
+            x2: padding.left,
+            y2: padding.top + plotHeight,
+            stroke: '#9aa8ad',
+            'stroke-width': 1.2
+        }));
+        chart.appendChild(make('line', {
+            x1: padding.left,
+            y1: padding.top + plotHeight,
+            x2: padding.left + plotWidth,
+            y2: padding.top + plotHeight,
+            stroke: '#9aa8ad',
+            'stroke-width': 1.2
+        }));
+
+        const points = labels.map((label, index) => ({
+            x: xForIndex(index),
+            y: yForMark(marks[index]),
+            label
+        }));
+
+        const line = make('path', {
+            d: points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '),
+            fill: 'none',
+            stroke: '#0d6b63',
+            'stroke-width': 4,
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round'
+        });
+        chart.appendChild(line);
+
+        points.forEach((point) => {
+            chart.appendChild(make('circle', {
+                cx: point.x,
+                cy: point.y,
+                r: 6.5,
+                fill: '#f2c45d',
+                stroke: '#0d6b63',
+                'stroke-width': 2
+            }));
+        });
+
+        points.forEach((point) => {
+            chart.appendChild(make('line', {
+                x1: point.x,
+                y1: padding.top + plotHeight,
+                x2: point.x,
+                y2: padding.top + plotHeight + 10,
+                stroke: '#9aa8ad',
+                'stroke-width': 1.2
+            }));
+            const label = make('text', {
+                x: point.x,
+                y: padding.top + plotHeight + 28,
+                'text-anchor': 'middle',
+                fill: '#5b6d72',
+                'font-size': 12,
+                'font-family': 'Segoe UI, Verdana, sans-serif'
+            });
+            label.textContent = String(point.label);
+            chart.appendChild(label);
+        });
+    })();
+    /*]]>*/
+</script>
 </body>
 </html>

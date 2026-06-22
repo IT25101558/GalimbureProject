@@ -1,6 +1,7 @@
 package com.example.galimbureproject.service;
 
 import com.example.galimbureproject.model.RegisteredUser;
+import com.example.galimbureproject.model.UserRole;
 import com.example.galimbureproject.repository.RegisteredUserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -27,7 +28,11 @@ public class RegisteredUserDetailsService implements UserDetailsService {
         return User.builder()
                 .username(user.getEmail())
                 .password(user.getPasswordHash())
-                .authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                .authorities(new SimpleGrantedAuthority("ROLE_" + resolveRole(user).name()))
                 .build();
+    }
+
+    private UserRole resolveRole(RegisteredUser user) {
+        return user.getRole() == null ? UserRole.STUDENT : user.getRole();
     }
 }

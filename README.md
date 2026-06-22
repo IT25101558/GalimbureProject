@@ -9,9 +9,19 @@ Spring Boot authentication app with registration, login, and a protected dashboa
 - `GET /register` shows the registration form.
 - `POST /register` validates, saves, and signs the new user in automatically.
 - `GET /dashboard` shows the protected dashboard after login or registration.
+- `GET /admin-dashboard` shows the admin dashboard for users with `ADMIN` role.
+- `POST /admin-dashboard/batches` creates a batch row from the admin dashboard.
+- `GET /admin-dashboard/marks` shows the week-plan and marks page.
+- `POST /admin-dashboard/week-plans` creates a week plan row for a selected batch.
+- `POST /admin-dashboard/users/{id}/role` updates a user's role from the admin dashboard.
+- `POST /admin-dashboard/marks` stores or updates weekly marks for the selected week plan.
 - Data is saved into the `registered_users` PostgreSQL table.
+- Batches are saved into the `batch_table` PostgreSQL table.
+- Week plans are saved into the `weekplan_table` PostgreSQL table.
+- Weekly marks are saved into the `student_marks` PostgreSQL table.
 - Passwords are stored as BCrypt hashes.
 - The app reads the database connection from environment variables.
+- New registrations are stored with the `STUDENT` role by default. To use the admin dashboard, at least one database user must have the `ADMIN` role.
 
 ## Render Setup
 
@@ -95,5 +105,93 @@ email
 phone
 address
 password_hash
+role
 created_at
 ```
+
+Roles:
+
+```text
+STUDENT
+ADMIN
+```
+
+## Batch Table
+
+The batch table is created automatically by Hibernate.
+
+Table name:
+
+```text
+batch_table
+```
+
+Columns:
+
+```text
+id
+batch_year
+place
+batch_date
+```
+
+Rules:
+
+- Batch year is unique.
+- The admin creates batches from the admin dashboard before creating week plans.
+
+## Student Marks Table
+
+The weekly marks table is created automatically by Hibernate.
+
+Table name:
+
+```text
+student_marks
+```
+
+Columns:
+
+```text
+id
+student_id
+week_plan_id
+mark
+created_at
+updated_at
+```
+
+Rules:
+
+- One student can have only one mark per week plan.
+- Admins select a batch and week plan, then create or update all student marks for that selection from `marks.html`.
+- The student dashboard still shows weekly marks as a line chart.
+
+## Week Plan Table
+
+The week plan table is created automatically by Hibernate.
+
+Table name:
+
+```text
+weekplan_table
+```
+
+Columns:
+
+```text
+id
+batch_id
+week_number
+task
+week_start_date
+week_end_date
+created_at
+updated_at
+```
+
+Rules:
+
+- Week numbers are unique per batch, not globally.
+- The admin creates the week plan on `marks.html` after selecting a batch.
+- The marks editor only shows the week plans created for the selected batch.

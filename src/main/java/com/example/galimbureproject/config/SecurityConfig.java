@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +29,7 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/login", "/register", "/error").permitAll()
+                        .requestMatchers("/admin-dashboard", "/admin-dashboard/**", "/admin_dashboard", "/admin_dashboard/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository))
@@ -36,7 +39,7 @@ public class SecurityConfig {
                         .loginProcessingUrl("/login")
                         .usernameParameter("email")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .successHandler(authenticationSuccessHandler())
                         .failureUrl("/login?error")
                         .permitAll()
                 )
@@ -74,5 +77,14 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(DaoAuthenticationProvider authenticationProvider) {
         return new ProviderManager(List.of(authenticationProvider));
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler authenticationSuccessHandler() {
+        return (request, response, authentication) -> {
+            boolean admin = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+            response.sendRedirect(admin ? "/admin-dashboard" : "/dashboard");
+        };
     }
 }

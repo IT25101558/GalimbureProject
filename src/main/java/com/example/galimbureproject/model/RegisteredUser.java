@@ -5,7 +5,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -37,12 +40,23 @@ public class RegisteredUser {
     @Column(nullable = false, length = 100)
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private UserRole role;
+
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     @PrePersist
+    @PreUpdate
     void setCreatedAt() {
-        createdAt = OffsetDateTime.now();
+        if (createdAt == null) {
+            createdAt = OffsetDateTime.now();
+        }
+
+        if (role == null) {
+            role = UserRole.STUDENT;
+        }
     }
 
     public Long getId() {
@@ -87,6 +101,14 @@ public class RegisteredUser {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
     }
 
     public OffsetDateTime getCreatedAt() {

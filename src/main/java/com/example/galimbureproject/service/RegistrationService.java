@@ -2,6 +2,7 @@ package com.example.galimbureproject.service;
 
 import com.example.galimbureproject.dto.RegistrationForm;
 import com.example.galimbureproject.model.RegisteredUser;
+import com.example.galimbureproject.model.UserRole;
 import com.example.galimbureproject.repository.RegisteredUserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class RegistrationService {
         user.setPhone(form.getPhone().trim());
         user.setAddress(form.getAddress().trim());
         user.setPasswordHash(passwordEncoder.encode(form.getPassword()));
+        user.setRole(UserRole.STUDENT);
 
         return registeredUserRepository.save(user);
     }

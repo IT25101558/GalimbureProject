@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Marks</title>
+    <style>
+        :root {
+            --ink: #132126;
+            --muted: #5b6d72;
+            --panel: #ffffff;
+            --wash: #eaf1f0;
+            --line: #d0dcde;
+            --accent: #0d6b63;
+            --accent-strong: #084d48;
+            --gold: #f2c45d;
+            --soft: #f7fafb;
+            --success: #146c43;
+            --danger: #b42318;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+            background:
+                    radial-gradient(circle at top right, rgba(242, 196, 93, 0.18), transparent 26%),
+                    radial-gradient(circle at bottom left, rgba(13, 107, 99, 0.16), transparent 32%),
+                    repeating-linear-gradient(90deg, rgba(19, 33, 38, 0.04) 0, rgba(19, 33, 38, 0.04) 1px, transparent 1px, transparent 80px),
+                    var(--wash);
+        }
+
+        main {
+            width: min(1240px, 100%);
+            margin: 0 auto;
+            padding: 28px 18px 44px;
+        }
+
+        .shell {
+            display: grid;
+            gap: 22px;
+        }
+
+        .topbar,
+        .panel {
+            border: 1px solid rgba(19, 33, 38, 0.12);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 22px 66px rgba(19, 33, 38, 0.08);
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 22px 24px;
+        }
+
+        .brand {
+            display: grid;
+            gap: 4px;
+        }
+
+        .brand span {
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.82rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: clamp(1.7rem, 3vw, 2.4rem);
+            line-height: 1;
+        }
+
+        .brand p {
+            margin: 0;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(19, 33, 38, 0.12);
+            border-radius: 999px;
+            padding: 10px 14px;
+            background: var(--soft);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-weight: 700;
+        }
+
+        .nav-link,
+        .logout-form button,
+        .save-button {
+            cursor: pointer;
+            border: 0;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #ffffff;
+            font: 700 0.95rem "Segoe UI", Verdana, sans-serif;
+            padding: 12px 18px;
+            transition: background-color 160ms ease, transform 160ms ease;
+            text-decoration: none;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .nav-link:hover,
+        .logout-form button:hover,
+        .save-button:hover {
+            background: var(--accent-strong);
+            transform: translateY(-1px);
+        }
+
+        .save-button:disabled,
+        select:disabled,
+        input[type="number"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.65;
+            transform: none;
+        }
+
+        .alert {
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-family: "Segoe UI", Verdana, sans-serif;
+        }
+
+        .alert-success {
+            border: 1px solid rgba(20, 108, 67, 0.22);
+            background: rgba(20, 108, 67, 0.08);
+            color: var(--success);
+        }
+
+        .alert-error {
+            border: 1px solid rgba(180, 35, 24, 0.22);
+            background: rgba(180, 35, 24, 0.08);
+            color: var(--danger);
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .metric {
+            padding: 18px;
+            border-radius: 12px;
+            background: var(--panel);
+            border: 1px solid rgba(19, 33, 38, 0.08);
+        }
+
+        .metric span {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 1.35rem;
+            line-height: 1.2;
+        }
+
+        .panel {
+            padding: 24px;
+        }
+
+        .section-title {
+            margin: 0 0 16px;
+            font-size: 1.45rem;
+            line-height: 1.1;
+        }
+
+        .section-copy {
+            margin: -6px 0 0;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.5;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: "Segoe UI", Verdana, sans-serif;
+            min-width: 940px;
+        }
+
+        thead th {
+            padding: 14px 12px;
+            text-align: left;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 1px solid var(--line);
+        }
+
+        tbody td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(19, 33, 38, 0.08);
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        select {
+            min-width: 140px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--ink);
+            font: 0.95rem "Segoe UI", Verdana, sans-serif;
+            padding: 10px 12px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(13, 107, 99, 0.14);
+        }
+
+        input[type="number"],
+        input[type="text"],
+        input[type="date"] {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--ink);
+            font: 0.95rem "Segoe UI", Verdana, sans-serif;
+            padding: 10px 12px;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        input[type="date"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(13, 107, 99, 0.14);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .plan-panel,
+        .marks-panel {
+            display: grid;
+            gap: 18px;
+        }
+
+        .plan-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .plan-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .filter-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field label {
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .field-error {
+            margin: 0;
+            color: var(--danger);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.84rem;
+            line-height: 1.4;
+            min-height: 1.1em;
+        }
+
+        .note {
+            padding: 18px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(242, 196, 93, 0.18), rgba(13, 107, 99, 0.08));
+            border: 1px solid rgba(242, 196, 93, 0.28);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.6;
+        }
+
+        .batch-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(19, 33, 38, 0.12);
+            background: rgba(255, 255, 255, 0.8);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-weight: 700;
+        }
+
+        .mark-input {
+            width: 120px;
+        }
+
+        .mark-status {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 7px 10px;
+            background: var(--soft);
+            border: 1px solid rgba(19, 33, 38, 0.08);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .mark-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .mark-actions .section-copy {
+            margin: 0;
+        }
+
+        .plan-table,
+        .marks-edit-table {
+            min-width: 860px;
+        }
+
+        .plan-link {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .plan-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 840px) {
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .plan-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .mark-actions {
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding-inline: 14px;
+            }
+
+            .panel,
+            .topbar {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section class="shell">
+        <header class="topbar">
+            <div class="brand">
+                <span>Admin Marks</span>
+                <h1>Weekly marks</h1>
+                <p th:if="${selectedBatch != null}"
+                   th:text="${'Batch ' + selectedBatch.batchYear + ' is selected.'}">Batch 2026 is selected.</p>
+                <p th:if="${selectedBatch == null}">Select a batch to manage week plans and marks.</p>
+            </div>
+
+            <div class="top-actions">
+                <a class="nav-link" th:href="@{/admin-dashboard}">Batches</a>
+                <form class="logout-form" th:action="@{/logout}" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit">Log out</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <section class="summary">
+            <div class="metric">
+                <span>Batches</span>
+                <strong th:text="${batchCount}">0</strong>
+            </div>
+            <div class="metric">
+                <span>Week plans</span>
+                <strong th:text="${weekPlanCount}">0</strong>
+            </div>
+            <div class="metric">
+                <span>Students</span>
+                <strong th:text="${studentCount}">0</strong>
+            </div>
+            <div class="metric">
+                <span>Assigned</span>
+                <strong th:text="${assignedCount}">0</strong>
+            </div>
+        </section>
+
+        <section class="panel plan-panel">
+            <div>
+                <h2 class="section-title">Create week plan</h2>
+                <p class="section-copy">Choose a batch, then create the weekly task and date range for that batch only.</p>
+            </div>
+
+            <div class="plan-layout">
+                <form class="plan-form" th:action="@{/admin-dashboard/week-plans}" th:object="${weekPlanForm}" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                    <div class="field">
+                        <label for="batchId">Batch</label>
+                        <select id="batchId" th:field="*{batchId}" th:disabled="${#lists.isEmpty(batches)}">
+                            <option value="" th:if="${#lists.isEmpty(batches)}">No batches available</option>
+                            <option th:each="batch : ${batches}"
+                                    th:value="${batch.id}"
+                                    th:text="${'Batch ' + batch.batchYear + ' - ' + batch.place + ' - ' + #temporals.format(batch.batchDate, 'dd MMM yyyy')}">Batch 2026</option>
+                        </select>
+                        <p class="field-error" th:if="${#fields.hasErrors('batchId')}" th:errors="*{batchId}"></p>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="weekNumber">Week number</label>
+                            <input id="weekNumber" type="number" min="1" max="52" step="1" th:field="*{weekNumber}">
+                            <p class="field-error" th:if="${#fields.hasErrors('weekNumber')}" th:errors="*{weekNumber}"></p>
+                        </div>
+
+                        <div class="field">
+                            <label for="task">Task</label>
+                            <input id="task" type="text" maxlength="250" th:field="*{task}">
+                            <p class="field-error" th:if="${#fields.hasErrors('task')}" th:errors="*{task}"></p>
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="weekStartDate">Week start</label>
+                            <input id="weekStartDate" type="date" th:field="*{weekStartDate}">
+                            <p class="field-error" th:if="${#fields.hasErrors('weekStartDate')}" th:errors="*{weekStartDate}"></p>
+                        </div>
+
+                        <div class="field">
+                            <label for="weekEndDate">Week end</label>
+                            <input id="weekEndDate" type="date" th:field="*{weekEndDate}">
+                            <p class="field-error" th:if="${#fields.hasErrors('weekEndDate')}" th:errors="*{weekEndDate}"></p>
+                        </div>
+                    </div>
+
+                    <p class="field-error" th:if="${#fields.hasErrors('dateRangeValid')}" th:errors="*{dateRangeValid}"></p>
+
+                    <div class="field">
+                        <button class="save-button" type="submit" th:disabled="${#lists.isEmpty(batches)}">Create week plan</button>
+                    </div>
+                </form>
+
+                <aside class="note">
+                    The week plan list below is filtered to the selected batch. The marks grid uses the same batch and week plan selection.
+                </aside>
+            </div>
+
+            <div class="table-wrap">
+                <table class="plan-table">
+                    <thead>
+                    <tr>
+                        <th>Batch</th>
+                        <th>Week</th>
+                        <th>Task</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Open</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="plan : ${weekPlans}">
+                        <td th:text="${'Batch ' + plan.batch.batchYear}">Batch 2026</td>
+                        <td th:text="${plan.weekNumber}">1</td>
+                        <td th:text="${plan.task}">Task</td>
+                        <td th:text="${#temporals.format(plan.weekStartDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                        <td th:text="${#temporals.format(plan.weekEndDate, 'dd MMM yyyy')}">07 Jan 2026</td>
+                        <td>
+                            <a class="plan-link" th:href="@{/admin-dashboard/marks(batchId=${plan.batch.id}, weekPlanId=${plan.id})}">Load marks</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(weekPlans)}">
+                        <td colspan="6" class="muted">No week plans found for this batch.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel marks-panel">
+            <div>
+                <h2 class="section-title">Update marks</h2>
+                <p class="section-copy">Pick a batch and week plan first. The table then loads the existing marks for that week.</p>
+            </div>
+
+            <form class="filter-form" th:action="@{/admin-dashboard/marks}" method="get">
+                <div class="field">
+                    <label for="batchFilter">Batch</label>
+                    <select id="batchFilter" name="batchId" onchange="this.form.submit()" th:disabled="${#lists.isEmpty(batches)}">
+                        <option value="" th:if="${#lists.isEmpty(batches)}">No batches available</option>
+                        <option th:each="batch : ${batches}"
+                                th:value="${batch.id}"
+                                th:selected="${selectedBatchId != null and batch.id.equals(selectedBatchId)}"
+                                th:text="${'Batch ' + batch.batchYear + ' - ' + batch.place}">Batch 2026</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="weekPlanFilter">Week plan</label>
+                    <select id="weekPlanFilter" name="weekPlanId" onchange="this.form.submit()" th:disabled="${#lists.isEmpty(weekPlans)}">
+                        <option value="" th:if="${#lists.isEmpty(weekPlans)}">No week plans</option>
+                        <option th:each="plan : ${weekPlans}"
+                                th:value="${plan.id}"
+                                th:selected="${selectedWeekPlanId != null and plan.id.equals(selectedWeekPlanId)}"
+                                th:text="${'Week ' + plan.weekNumber + ' - ' + plan.task}">Week 1</option>
+                    </select>
+                </div>
+            </form>
+
+            <div class="batch-pill" th:if="${selectedWeekPlan != null}">
+                <span>Selected</span>
+                <strong th:text="${'Batch ' + selectedBatch.batchYear + ' / Week ' + selectedWeekPlan.weekNumber}">Batch 2026 / Week 1</strong>
+            </div>
+
+            <div class="table-wrap" th:if="${selectedWeekPlan != null}">
+                <form class="week-mark-form" th:action="@{/admin-dashboard/marks}" th:object="${studentMarkBatchForm}" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" th:field="*{weekPlanId}">
+
+                    <table class="marks-edit-table">
+                        <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Email</th>
+                            <th>Mark</th>
+                            <th>State</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="student, stat : ${students}" th:with="entry=${studentMarkBatchForm.entries[stat.index]}">
+                            <td th:text="${student.fullName}">Student Name</td>
+                            <td th:text="${student.email}">student@example.com</td>
+                            <td>
+                                <input type="hidden" th:field="*{entries[__${stat.index}__].studentId}">
+                                <input class="mark-input" type="number" min="0" max="100" step="1" th:field="*{entries[__${stat.index}__].mark}">
+                                <p class="field-error" th:if="${#fields.hasErrors('entries[' + stat.index + '].mark')}" th:errors="*{entries[__${stat.index}__].mark}"></p>
+                            </td>
+                            <td>
+                                <span class="mark-status" th:text="${entry.mark != null ? 'Assigned' : 'Not assigned'}">Not assigned</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(students)}">
+                            <td colspan="4" class="muted">No student accounts are available yet.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="mark-actions">
+                        <p class="section-copy">Blank marks are skipped. Existing marks for the selected batch and week load automatically.</p>
+                        <button class="save-button" type="submit" th:disabled="${#lists.isEmpty(students)}">Save week marks</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="note" th:if="${selectedWeekPlan == null}">
+                No week plan is selected yet. Choose a batch and week plan above.
+            </div>
+        </section>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        :root {
+            --ink: #132126;
+            --muted: #5b6d72;
+            --panel: #ffffff;
+            --wash: #eaf1f0;
+            --line: #d0dcde;
+            --accent: #0d6b63;
+            --accent-strong: #084d48;
+            --gold: #f2c45d;
+            --soft: #f7fafb;
+            --success: #146c43;
+            --danger: #b42318;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+            background:
+                    radial-gradient(circle at top right, rgba(242, 196, 93, 0.18), transparent 26%),
+                    radial-gradient(circle at bottom left, rgba(13, 107, 99, 0.16), transparent 32%),
+                    repeating-linear-gradient(90deg, rgba(19, 33, 38, 0.04) 0, rgba(19, 33, 38, 0.04) 1px, transparent 1px, transparent 80px),
+                    var(--wash);
+        }
+
+        main {
+            width: min(1240px, 100%);
+            margin: 0 auto;
+            padding: 28px 18px 44px;
+        }
+
+        .shell {
+            display: grid;
+            gap: 22px;
+        }
+
+        .topbar,
+        .panel {
+            border: 1px solid rgba(19, 33, 38, 0.12);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 22px 66px rgba(19, 33, 38, 0.08);
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 22px 24px;
+        }
+
+        .brand {
+            display: grid;
+            gap: 4px;
+        }
+
+        .brand span {
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.82rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: clamp(1.7rem, 3vw, 2.4rem);
+            line-height: 1;
+        }
+
+        .brand p {
+            margin: 0;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(19, 33, 38, 0.12);
+            border-radius: 999px;
+            padding: 10px 14px;
+            background: var(--soft);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-weight: 700;
+        }
+
+        .nav-link,
+        .logout-form button,
+        .save-button {
+            cursor: pointer;
+            border: 0;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #ffffff;
+            font: 700 0.95rem "Segoe UI", Verdana, sans-serif;
+            padding: 12px 18px;
+            transition: background-color 160ms ease, transform 160ms ease;
+            text-decoration: none;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .nav-link:hover,
+        .logout-form button:hover,
+        .save-button:hover {
+            background: var(--accent-strong);
+            transform: translateY(-1px);
+        }
+
+        .save-button:disabled,
+        select:disabled,
+        input[type="number"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.65;
+            transform: none;
+        }
+
+        .alert {
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-family: "Segoe UI", Verdana, sans-serif;
+        }
+
+        .alert-success {
+            border: 1px solid rgba(20, 108, 67, 0.22);
+            background: rgba(20, 108, 67, 0.08);
+            color: var(--success);
+        }
+
+        .alert-error {
+            border: 1px solid rgba(180, 35, 24, 0.22);
+            background: rgba(180, 35, 24, 0.08);
+            color: var(--danger);
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .metric {
+            padding: 18px;
+            border-radius: 12px;
+            background: var(--panel);
+            border: 1px solid rgba(19, 33, 38, 0.08);
+        }
+
+        .metric span {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 1.35rem;
+            line-height: 1.2;
+        }
+
+        .panel {
+            padding: 24px;
+        }
+
+        .section-title {
+            margin: 0 0 16px;
+            font-size: 1.45rem;
+            line-height: 1.1;
+        }
+
+        .section-copy {
+            margin: -6px 0 0;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.5;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: "Segoe UI", Verdana, sans-serif;
+            min-width: 940px;
+        }
+
+        thead th {
+            padding: 14px 12px;
+            text-align: left;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 1px solid var(--line);
+        }
+
+        tbody td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(19, 33, 38, 0.08);
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 7px 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            background: var(--soft);
+            border: 1px solid rgba(19, 33, 38, 0.08);
+        }
+
+        .role-badge.admin {
+            background: rgba(242, 196, 93, 0.18);
+            border-color: rgba(242, 196, 93, 0.35);
+        }
+
+        .role-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        select {
+            min-width: 140px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--ink);
+            font: 0.95rem "Segoe UI", Verdana, sans-serif;
+            padding: 10px 12px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(13, 107, 99, 0.14);
+        }
+
+        input[type="number"],
+        input[type="text"],
+        input[type="date"] {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--ink);
+            font: 0.95rem "Segoe UI", Verdana, sans-serif;
+            padding: 10px 12px;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        input[type="date"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(13, 107, 99, 0.14);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .batch-panel {
+            display: grid;
+            gap: 18px;
+        }
+
+        .batch-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .batch-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field label {
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .field-error {
+            margin: 0;
+            color: var(--danger);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.84rem;
+            line-height: 1.4;
+            min-height: 1.1em;
+        }
+
+        .note {
+            padding: 18px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(242, 196, 93, 0.18), rgba(13, 107, 99, 0.08));
+            border: 1px solid rgba(242, 196, 93, 0.28);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.6;
+        }
+
+        .batch-table {
+            min-width: 820px;
+        }
+
+        .plan-link {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .plan-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 840px) {
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .batch-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding-inline: 14px;
+            }
+
+            .panel,
+            .topbar {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section class="shell">
+        <header class="topbar">
+            <div class="brand">
+                <span>Admin Dashboard</span>
+                <h1>Batch management</h1>
+                <p>Created batches are used by the weekly marks page.</p>
+            </div>
+
+            <div class="top-actions">
+                <a class="nav-link" th:href="@{/admin-dashboard/marks}">Weekly marks</a>
+                <div class="pill">
+                    <span>Users</span>
+                    <strong th:text="${totalUsers}">0</strong>
+                </div>
+                <form class="logout-form" th:action="@{/logout}" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit">Log out</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <section class="summary">
+            <div class="metric">
+                <span>Total users</span>
+                <strong th:text="${totalUsers}">0</strong>
+            </div>
+            <div class="metric">
+                <span>Students</span>
+                <strong th:text="${studentUsers}">0</strong>
+            </div>
+            <div class="metric">
+                <span>Admins</span>
+                <strong th:text="${adminUsers}">0</strong>
+            </div>
+            <div class="metric">
+                <span>Batches</span>
+                <strong th:text="${batchCount}">0</strong>
+            </div>
+        </section>
+
+        <section class="panel batch-panel">
+            <div>
+                <h2 class="section-title">Create batch</h2>
+                <p class="section-copy">Add a batch year, place, and date before creating week plans and marks.</p>
+            </div>
+
+            <div class="batch-layout">
+                <form class="batch-form" th:action="@{/admin-dashboard/batches}" th:object="${batchForm}" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="batchYear">Batch year</label>
+                            <input id="batchYear" type="number" min="1900" max="2100" step="1" th:field="*{batchYear}">
+                            <p class="field-error" th:if="${#fields.hasErrors('batchYear')}" th:errors="*{batchYear}"></p>
+                        </div>
+
+                        <div class="field">
+                            <label for="batchDate">Date</label>
+                            <input id="batchDate" type="date" th:field="*{batchDate}">
+                            <p class="field-error" th:if="${#fields.hasErrors('batchDate')}" th:errors="*{batchDate}"></p>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="place">Place</label>
+                        <input id="place" type="text" maxlength="150" th:field="*{place}">
+                        <p class="field-error" th:if="${#fields.hasErrors('place')}" th:errors="*{place}"></p>
+                    </div>
+
+                    <div class="field">
+                        <button class="save-button" type="submit">Create batch</button>
+                    </div>
+                </form>
+
+                <aside class="note">
+                    Use the weekly marks page to create week plans for a batch and enter marks for the selected week.
+                </aside>
+            </div>
+
+            <div class="table-wrap">
+                <table class="batch-table">
+                    <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Place</th>
+                        <th>Date</th>
+                        <th>Open marks</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="batch : ${batches}">
+                        <td th:text="${batch.batchYear}">2026</td>
+                        <td th:text="${batch.place}">Colombo</td>
+                        <td th:text="${#temporals.format(batch.batchDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                        <td><a class="plan-link" th:href="@{/admin-dashboard/marks(batchId=${batch.id})}">Open marks</a></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(batches)}">
+                        <td colspan="4" class="muted">No batches have been created yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2 class="section-title">Registered users</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Created</th>
+                        <th>Update role</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.fullName}">User Name</td>
+                        <td th:text="${user.email}">user@example.com</td>
+                        <td th:text="${user.phone}">+94 000 000 000</td>
+                        <td>
+                            <span class="role-badge" th:class="${user.role != null and user.role.name() == 'ADMIN'} ? 'role-badge admin' : 'role-badge'"
+                                  th:text="${user.role != null ? user.role.name() : 'STUDENT'}">STUDENT</span>
+                        </td>
+                        <td th:text="${#temporals.format(user.createdAt, 'dd MMM yyyy')}">01 Jan 2026</td>
+                        <td>
+                            <form class="role-form" th:action="@{/admin-dashboard/users/{id}/role(id=${user.id})}" method="post">
+                                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <select name="role" aria-label="Select role">
+                                    <option value="STUDENT" th:selected="${user.role == null or user.role.name() == 'STUDENT'}">STUDENT</option>
+                                    <option value="ADMIN" th:selected="${user.role != null and user.role.name() == 'ADMIN'}">ADMIN</option>
+                                </select>
+                                <button class="save-button" type="submit">Save</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="6" class="muted">No users found.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </section>
+</main>
+</body>
+</html>

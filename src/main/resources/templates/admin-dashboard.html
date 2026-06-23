@@ -459,14 +459,14 @@
 
                         <div class="field">
                             <label for="batchDate">Date</label>
-                            <input id="batchDate" type="text" placeholder="yyyy-MM-dd" th:field="*{batchDate}">
+                            <input id="batchDate" type="text" placeholder="Class date" th:field="*{batchDate}">
                             <p class="field-error" th:if="${#fields.hasErrors('batchDate')}" th:errors="*{batchDate}"></p>
                         </div>
                     </div>
 
                     <div class="field">
                         <label for="place">Place</label>
-                        <input id="place" type="text" maxlength="150" th:field="*{place}">
+                        <input id="place" type="text" placeholder="Class venue" maxlength="150" th:field="*{place}">
                         <p class="field-error" th:if="${#fields.hasErrors('place')}" th:errors="*{place}"></p>
                     </div>
 

@@ -40,6 +40,9 @@ public class RegisteredUser {
     @Column(nullable = false, length = 100)
     private String passwordHash;
 
+    @Column(name = "batch_year")
+    private Integer batchYear;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private UserRole role;
@@ -101,6 +104,14 @@ public class RegisteredUser {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public Integer getBatchYear() {
+        return batchYear;
+    }
+
+    public void setBatchYear(Integer batchYear) {
+        this.batchYear = batchYear;
     }
 
     public UserRole getRole() {

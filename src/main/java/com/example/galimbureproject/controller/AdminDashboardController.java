@@ -234,7 +234,12 @@ public class AdminDashboardController {
                 ? List.of()
                 : weekPlanService.getWeekPlansForBatch(selectedBatch.getId());
         WeekPlan selectedWeekPlan = resolveSelectedWeekPlan(weekPlans, requestedWeekPlanId);
-        List<RegisteredUser> students = registeredUserRepository.findAllByRoleOrderByFullNameAsc(UserRole.STUDENT);
+        List<RegisteredUser> students = selectedBatch == null
+                ? List.of()
+                : registeredUserRepository.findAllByRoleAndBatchYearOrderByFullNameAsc(
+                        UserRole.STUDENT,
+                        selectedBatch.getBatchYear()
+                );
         List<StudentMark> weekMarks = selectedWeekPlan == null
                 ? List.of()
                 : studentMarkService.getMarksForWeekPlan(selectedWeekPlan.getId());

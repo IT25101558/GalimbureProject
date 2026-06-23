@@ -515,6 +515,7 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Role</th>
+                        <th>Batch year</th>
                         <th>Created</th>
                         <th>Update role</th>
                     </tr>
@@ -528,6 +529,7 @@
                             <span class="role-badge" th:class="${user.role != null and user.role.name() == 'ADMIN'} ? 'role-badge admin' : 'role-badge'"
                                   th:text="${user.role != null ? user.role.name() : 'STUDENT'}">STUDENT</span>
                         </td>
+                        <td th:text="${user.batchYear != null ? user.batchYear : '-'}">2026</td>
                         <td th:text="${#temporals.format(user.createdAt, 'dd MMM yyyy')}">01 Jan 2026</td>
                         <td>
                             <form class="role-form" th:action="@{/admin-dashboard/users/{id}/role(id=${user.id})}" method="post">
@@ -541,7 +543,7 @@
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(users)}">
-                        <td colspan="6" class="muted">No users found.</td>
+                        <td colspan="7" class="muted">No users found.</td>
                     </tr>
                     </tbody>
                 </table>

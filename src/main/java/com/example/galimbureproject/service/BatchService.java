@@ -28,6 +28,15 @@ public class BatchService {
         return batchRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<Batch> findByBatchYear(Integer batchYear) {
+        if (batchYear == null) {
+            return Optional.empty();
+        }
+
+        return batchRepository.findByBatchYear(batchYear);
+    }
+
     @Transactional
     public Batch createBatch(BatchForm form) {
         Integer batchYear = form.getBatchYear();

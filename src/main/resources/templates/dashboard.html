@@ -443,6 +443,10 @@
                         <strong th:text="${user.phone}">+94 000 000 000</strong>
                     </div>
                     <div class="detail-row">
+                        <span>Batch year</span>
+                        <strong th:text="${user.batchYear != null ? user.batchYear : '-'}">2026</strong>
+                    </div>
+                    <div class="detail-row">
                         <span>Address</span>
                         <p th:text="${user.address}">123 Main Street</p>
                     </div>

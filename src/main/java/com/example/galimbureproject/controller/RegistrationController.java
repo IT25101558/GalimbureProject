@@ -2,6 +2,7 @@ package com.example.galimbureproject.controller;
 
 import com.example.galimbureproject.dto.RegistrationForm;
 import com.example.galimbureproject.model.RegisteredUser;
+import com.example.galimbureproject.service.BatchService;
 import com.example.galimbureproject.service.RegistrationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,15 +27,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class RegistrationController {
 
     private final RegistrationService registrationService;
+    private final BatchService batchService;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
 
     public RegistrationController(
             RegistrationService registrationService,
+            BatchService batchService,
             AuthenticationManager authenticationManager,
             SecurityContextRepository securityContextRepository
     ) {
         this.registrationService = registrationService;
+        this.batchService = batchService;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
     }
@@ -50,9 +54,7 @@ public class RegistrationController {
             return redirectFor(authentication);
         }
 
-        if (!model.containsAttribute("registrationForm")) {
-            model.addAttribute("registrationForm", new RegistrationForm());
-        }
+        populateRegistrationModel(model, new RegistrationForm());
         return "register";
     }
 
@@ -60,6 +62,7 @@ public class RegistrationController {
     public String register(
             @Valid @ModelAttribute("registrationForm") RegistrationForm registrationForm,
             BindingResult bindingResult,
+            Model model,
             RedirectAttributes redirectAttributes,
             HttpServletRequest request,
             HttpServletResponse response,
@@ -70,6 +73,7 @@ public class RegistrationController {
         }
 
         if (bindingResult.hasErrors()) {
+            populateRegistrationModel(model, registrationForm);
             return "register";
         }
 
@@ -77,7 +81,16 @@ public class RegistrationController {
         try {
             registeredUser = registrationService.register(registrationForm);
         } catch (IllegalArgumentException exception) {
-            bindingResult.rejectValue("email", "email.exists", exception.getMessage());
+            String message = exception.getMessage() == null ? "Registration failed." : exception.getMessage();
+            String lowerMessage = message.toLowerCase();
+            if (lowerMessage.contains("email")) {
+                bindingResult.rejectValue("email", "email.exists", message);
+            } else if (lowerMessage.contains("batch")) {
+                bindingResult.rejectValue("batchYear", "batch.notFound", message);
+            } else {
+                bindingResult.rejectValue("batchYear", "registration.failed", message);
+            }
+            populateRegistrationModel(model, registrationForm);
             return "register";
         }
 
@@ -118,6 +131,12 @@ public class RegistrationController {
             return "redirect:/admin-dashboard";
         }
         return isAuthenticated(authentication) ? "redirect:/dashboard" : "redirect:/login";
+    }
+
+    private void populateRegistrationModel(Model model, RegistrationForm registrationForm) {
+        var batches = batchService.getAllBatches();
+        model.addAttribute("registrationForm", registrationForm);
+        model.addAttribute("batches", batches);
     }
 
     private boolean isAdmin(Authentication authentication) {

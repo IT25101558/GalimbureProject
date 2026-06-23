@@ -1,6 +1,7 @@
 package com.example.galimbureproject.service;
 
 import com.example.galimbureproject.dto.RegistrationForm;
+import com.example.galimbureproject.model.Batch;
 import com.example.galimbureproject.model.RegisteredUser;
 import com.example.galimbureproject.model.UserRole;
 import com.example.galimbureproject.repository.RegisteredUserRepository;
@@ -12,10 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class RegistrationService {
 
     private final RegisteredUserRepository registeredUserRepository;
+    private final BatchService batchService;
     private final PasswordEncoder passwordEncoder;
 
-    public RegistrationService(RegisteredUserRepository registeredUserRepository, PasswordEncoder passwordEncoder) {
+    public RegistrationService(
+            RegisteredUserRepository registeredUserRepository,
+            BatchService batchService,
+            PasswordEncoder passwordEncoder
+    ) {
         this.registeredUserRepository = registeredUserRepository;
+        this.batchService = batchService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -33,6 +40,10 @@ public class RegistrationService {
         user.setAddress(form.getAddress().trim());
         user.setPasswordHash(passwordEncoder.encode(form.getPassword()));
         user.setRole(UserRole.STUDENT);
+        Integer batchYear = form.getBatchYear();
+        Batch batch = batchService.findByBatchYear(batchYear)
+                .orElseThrow(() -> new IllegalArgumentException("Selected batch was not found."));
+        user.setBatchYear(batch.getBatchYear());
 
         return registeredUserRepository.save(user);
     }

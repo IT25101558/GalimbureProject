@@ -57,7 +57,7 @@ public class StudentMarkService {
             throw new IllegalArgumentException("Select a week plan.");
         }
 
-        WeekPlan weekPlan = weekPlanRepository.findById(weekPlanId)
+        WeekPlan weekPlan = weekPlanRepository.findByIdWithBatch(weekPlanId)
                 .orElseThrow(() -> new IllegalArgumentException("Selected week plan was not found."));
 
         if (entries == null) {
@@ -78,7 +78,7 @@ public class StudentMarkService {
             throw new IllegalArgumentException("Select a week plan.");
         }
 
-        WeekPlan weekPlan = weekPlanRepository.findById(weekPlanId)
+        WeekPlan weekPlan = weekPlanRepository.findByIdWithBatch(weekPlanId)
                 .orElseThrow(() -> new IllegalArgumentException("Selected week plan was not found."));
         return saveOrUpdate(studentId, weekPlan, markValue);
     }
@@ -97,6 +97,12 @@ public class StudentMarkService {
 
         if (student.getRole() == UserRole.ADMIN) {
             throw new IllegalArgumentException("Marks can only be assigned to students.");
+        }
+
+        Integer studentBatchYear = student.getBatchYear();
+        Integer weekPlanBatchYear = weekPlan.getBatch() != null ? weekPlan.getBatch().getBatchYear() : null;
+        if (studentBatchYear == null || weekPlanBatchYear == null || !studentBatchYear.equals(weekPlanBatchYear)) {
+            throw new IllegalArgumentException("Selected student does not belong to the selected batch.");
         }
 
         StudentMark mark = studentMarkRepository.findByStudent_IdAndWeekPlan_Id(student.getId(), weekPlan.getId())

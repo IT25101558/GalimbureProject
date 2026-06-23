@@ -17,6 +17,8 @@ public interface RegisteredUserRepository extends JpaRepository<RegisteredUser, 
 
     List<RegisteredUser> findAllByRoleOrderByFullNameAsc(UserRole role);
 
+    List<RegisteredUser> findAllByRoleAndBatchYearOrderByFullNameAsc(UserRole role, Integer batchYear);
+
     List<RegisteredUser> findByRoleIsNull();
 
     long countByRole(UserRole role);

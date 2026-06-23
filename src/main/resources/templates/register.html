@@ -125,7 +125,8 @@
         }
 
         input,
-        textarea {
+        textarea,
+        select {
             width: 100%;
             border: 1px solid var(--line);
             border-radius: 6px;
@@ -142,7 +143,8 @@
         }
 
         input:focus,
-        textarea:focus {
+        textarea:focus,
+        select:focus {
             outline: none;
             border-color: var(--accent);
             background: #ffffff;
@@ -184,6 +186,14 @@
 
         .switch a:hover {
             text-decoration: underline;
+        }
+
+        .help {
+            margin: -8px 0 0;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
 
         button {
@@ -229,7 +239,7 @@
             <div>
                 <div class="badge">New Account</div>
                 <h1>Register</h1>
-                <p>Create a user record and store it directly in the PostgreSQL database connected to this application. New accounts are saved with the STUDENT role.</p>
+                <p>Create a user record and store it directly in the PostgreSQL database connected to this application. New accounts are saved with the STUDENT role and linked to a batch year.</p>
             </div>
             <p>Records are saved in the registered_users table.</p>
         </aside>
@@ -266,12 +276,28 @@
                 </div>
 
                 <div class="field">
+                    <label for="batchYear">Batch year</label>
+                    <select id="batchYear" th:field="*{batchYear}" th:disabled="${#lists.isEmpty(batches)}" required>
+                        <option value="" th:if="${!#lists.isEmpty(batches)}">Select batch year</option>
+                        <option value="" th:if="${#lists.isEmpty(batches)}">No batches available</option>
+                        <option th:each="batch : ${batches}"
+                                th:value="${batch.batchYear}"
+                                th:text="${'Batch ' + batch.batchYear + ' - ' + batch.place}">Batch 2026</option>
+                    </select>
+                    <span class="error" th:if="${#fields.hasErrors('batchYear')}" th:errors="*{batchYear}"></span>
+                </div>
+
+                <p class="help" th:if="${#lists.isEmpty(batches)}">
+                    Create at least one batch from the admin dashboard before opening registrations.
+                </p>
+
+                <div class="field">
                     <label for="password">Password</label>
                     <input id="password" type="password" th:field="*{password}" autocomplete="new-password" required>
                     <span class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
                 </div>
 
-                <button type="submit">Create account</button>
+                <button type="submit" th:disabled="${#lists.isEmpty(batches)}">Create account</button>
             </form>
 
             <p class="switch">Already have an account? <a th:href="@{/login}">Log in</a></p>

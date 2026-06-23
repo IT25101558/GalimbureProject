@@ -17,6 +17,8 @@ import java.util.Map;
 @Service
 public class RegisteredUserBatchBackfillService {
 
+    private static final String LEGACY_BATCH_PLACE = "Legacy batch";
+
     private final RegisteredUserRepository registeredUserRepository;
     private final BatchRepository batchRepository;
 
@@ -35,7 +37,7 @@ public class RegisteredUserBatchBackfillService {
             return;
         }
 
-        Map<Integer, Batch> batchesByYear = new HashMap<>();
+        Map<Integer, Batch> legacyBatchesByYear = new HashMap<>();
         boolean changed = false;
 
         for (RegisteredUser user : users) {
@@ -43,14 +45,25 @@ public class RegisteredUserBatchBackfillService {
                 continue;
             }
 
+            Batch batch = user.getBatch();
             Integer batchYear = user.getBatchYear();
+            if (batch != null) {
+                Integer batchValue = batch.getBatchYear();
+                if (batchYear == null || !batchYear.equals(batchValue)) {
+                    user.setBatchYear(batchValue);
+                    changed = true;
+                }
+                continue;
+            }
+
             if (batchYear == null) {
                 batchYear = resolveBatchYear(user);
                 user.setBatchYear(batchYear);
                 changed = true;
             }
 
-            ensureBatchExists(batchYear, batchesByYear);
+            user.setBatch(ensureLegacyBatch(batchYear, legacyBatchesByYear));
+            changed = true;
         }
 
         if (changed) {
@@ -63,19 +76,19 @@ public class RegisteredUserBatchBackfillService {
         return createdAt != null ? createdAt.getYear() : LocalDate.now().getYear();
     }
 
-    private Batch ensureBatchExists(Integer batchYear, Map<Integer, Batch> batchesByYear) {
+    private Batch ensureLegacyBatch(Integer batchYear, Map<Integer, Batch> batchesByYear) {
         return batchesByYear.computeIfAbsent(batchYear, this::resolveOrCreateBatch);
     }
 
     private Batch resolveOrCreateBatch(Integer batchYear) {
-        return batchRepository.findByBatchYear(batchYear)
+        return batchRepository.findFirstByBatchYearAndPlaceIgnoreCaseOrderByIdAsc(batchYear, LEGACY_BATCH_PLACE)
                 .orElseGet(() -> createLegacyBatch(batchYear));
     }
 
     private Batch createLegacyBatch(Integer batchYear) {
         Batch batch = new Batch();
         batch.setBatchYear(batchYear);
-        batch.setPlace("Legacy batch");
+        batch.setPlace(LEGACY_BATCH_PLACE);
         batch.setBatchDate(LocalDate.of(batchYear, 1, 1));
         return batchRepository.save(batch);
     }

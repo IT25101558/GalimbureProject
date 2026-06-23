@@ -14,7 +14,7 @@ public interface WeekPlanRepository extends JpaRepository<WeekPlan, Long> {
             select weekPlan
             from WeekPlan weekPlan
             join fetch weekPlan.batch
-            order by weekPlan.batch.batchYear asc, weekPlan.weekNumber asc
+            order by weekPlan.batch.batchYear asc, weekPlan.batch.place asc, weekPlan.weekNumber asc
             """)
     List<WeekPlan> findAllOrderedWithBatch();
 

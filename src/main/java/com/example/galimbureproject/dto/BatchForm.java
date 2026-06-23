@@ -4,10 +4,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import java.time.LocalDate;
 
 public class BatchForm {
 
@@ -20,9 +18,9 @@ public class BatchForm {
     @Size(max = 150, message = "Place must be 150 characters or fewer.")
     private String place;
 
-    @NotNull(message = "Date is required.")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate batchDate;
+    @NotBlank(message = "Date is required.")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date must be in yyyy-MM-dd format.")
+    private String batchDate;
 
     public Integer getBatchYear() {
         return batchYear;
@@ -40,11 +38,11 @@ public class BatchForm {
         this.place = place;
     }
 
-    public LocalDate getBatchDate() {
+    public String getBatchDate() {
         return batchDate;
     }
 
-    public void setBatchDate(LocalDate batchDate) {
+    public void setBatchDate(String batchDate) {
         this.batchDate = batchDate;
     }
 }

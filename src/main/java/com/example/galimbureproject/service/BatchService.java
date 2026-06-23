@@ -6,6 +6,8 @@ import com.example.galimbureproject.repository.BatchRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,21 +22,12 @@ public class BatchService {
 
     @Transactional(readOnly = true)
     public List<Batch> getAllBatches() {
-        return batchRepository.findAllByOrderByBatchYearAsc();
+        return batchRepository.findAllByOrderByBatchYearAscPlaceAsc();
     }
 
     @Transactional(readOnly = true)
     public Optional<Batch> findById(Long id) {
         return batchRepository.findById(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<Batch> findByBatchYear(Integer batchYear) {
-        if (batchYear == null) {
-            return Optional.empty();
-        }
-
-        return batchRepository.findByBatchYear(batchYear);
     }
 
     @Transactional
@@ -44,14 +37,27 @@ public class BatchService {
             throw new IllegalArgumentException("Batch year is required.");
         }
 
-        if (batchRepository.existsByBatchYear(batchYear)) {
-            throw new IllegalArgumentException("Batch " + batchYear + " already exists.");
+        String place = form.getPlace() == null ? "" : form.getPlace().trim();
+        if (place.isEmpty()) {
+            throw new IllegalArgumentException("Place is required.");
+        }
+
+        if (batchRepository.existsByBatchYearAndPlaceIgnoreCase(batchYear, place)) {
+            throw new IllegalArgumentException("Batch " + batchYear + " - " + place + " already exists.");
+        }
+
+        String batchDateText = form.getBatchDate() == null ? "" : form.getBatchDate().trim();
+        LocalDate batchDate;
+        try {
+            batchDate = LocalDate.parse(batchDateText);
+        } catch (DateTimeParseException exception) {
+            throw new IllegalArgumentException("Date must be in yyyy-MM-dd format.");
         }
 
         Batch batch = new Batch();
         batch.setBatchYear(batchYear);
-        batch.setPlace(form.getPlace() == null ? "" : form.getPlace().trim());
-        batch.setBatchDate(form.getBatchDate());
+        batch.setPlace(place);
+        batch.setBatchDate(batchDate);
         return batchRepository.save(batch);
     }
 }

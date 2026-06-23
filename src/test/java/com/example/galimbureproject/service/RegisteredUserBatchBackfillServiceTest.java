@@ -39,12 +39,14 @@ class RegisteredUserBatchBackfillServiceTest {
         ReflectionTestUtils.setField(user, "createdAt", OffsetDateTime.parse("2024-06-01T10:15:30Z"));
 
         when(registeredUserRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(user));
-        when(batchRepository.findByBatchYear(2024)).thenReturn(Optional.empty());
+        when(batchRepository.findFirstByBatchYearAndPlaceIgnoreCaseOrderByIdAsc(2024, "Legacy batch"))
+                .thenReturn(Optional.empty());
         when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         registeredUserBatchBackfillService.backfillMissingBatchYears();
 
         assertEquals(2024, user.getBatchYear());
+        assertEquals("Legacy batch", user.getBatch().getPlace());
         verify(batchRepository).save(any(Batch.class));
         verify(registeredUserRepository).saveAll(List.of(user));
     }

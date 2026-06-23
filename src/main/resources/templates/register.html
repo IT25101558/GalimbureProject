@@ -239,7 +239,7 @@
             <div>
                 <div class="badge">New Account</div>
                 <h1>Register</h1>
-                <p>Create a user record and store it directly in the PostgreSQL database connected to this application. New accounts are saved with the STUDENT role and linked to a batch year.</p>
+                <p>Create a user record and store it directly in the PostgreSQL database connected to this application. New accounts are saved with the STUDENT role and linked to a batch.</p>
             </div>
             <p>Records are saved in the registered_users table.</p>
         </aside>
@@ -276,15 +276,15 @@
                 </div>
 
                 <div class="field">
-                    <label for="batchYear">Batch year</label>
-                    <select id="batchYear" th:field="*{batchYear}" th:disabled="${#lists.isEmpty(batches)}" required>
-                        <option value="" th:if="${!#lists.isEmpty(batches)}">Select batch year</option>
+                    <label for="batchId">Batch</label>
+                    <select id="batchId" th:field="*{batchId}" th:disabled="${#lists.isEmpty(batches)}" required>
+                        <option value="" th:if="${!#lists.isEmpty(batches)}">Select batch</option>
                         <option value="" th:if="${#lists.isEmpty(batches)}">No batches available</option>
                         <option th:each="batch : ${batches}"
-                                th:value="${batch.batchYear}"
-                                th:text="${'Batch ' + batch.batchYear + ' - ' + batch.place}">Batch 2026</option>
+                                th:value="${batch.id}"
+                                th:text="${batch.displayLabel}">Batch 2026 - Gampaha - 01 Jan 2026</option>
                     </select>
-                    <span class="error" th:if="${#fields.hasErrors('batchYear')}" th:errors="*{batchYear}"></span>
+                    <span class="error" th:if="${#fields.hasErrors('batchId')}" th:errors="*{batchId}"></span>
                 </div>
 
                 <p class="help" th:if="${#lists.isEmpty(batches)}">

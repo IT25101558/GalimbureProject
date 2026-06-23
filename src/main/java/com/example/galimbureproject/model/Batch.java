@@ -9,16 +9,19 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Table(
         name = "batch_table",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_batch_table_batch_year",
-                columnNames = "batch_year"
+                name = "uk_batch_table_batch_year_place",
+                columnNames = {"batch_year", "place"}
         )
 )
 public class Batch {
+
+    private static final DateTimeFormatter DISPLAY_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,5 +62,30 @@ public class Batch {
 
     public void setBatchDate(LocalDate batchDate) {
         this.batchDate = batchDate;
+    }
+
+    public String getCompactLabel() {
+        if (batchYear == null && (place == null || place.isBlank())) {
+            return "-";
+        }
+
+        if (batchYear == null) {
+            return place;
+        }
+
+        if (place == null || place.isBlank()) {
+            return String.valueOf(batchYear);
+        }
+
+        return batchYear + " - " + place;
+    }
+
+    public String getDisplayLabel() {
+        String compactLabel = getCompactLabel();
+        if (batchDate == null) {
+            return compactLabel;
+        }
+
+        return compactLabel + " - " + batchDate.format(DISPLAY_DATE_FORMATTER);
     }
 }

@@ -86,7 +86,7 @@ public class AdminDashboardController {
             Batch savedBatch = batchService.createBatch(batchForm);
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Batch " + savedBatch.getBatchYear() + " was created."
+                    "Batch " + savedBatch.getCompactLabel() + " was created."
             );
             return "redirect:/admin-dashboard";
         } catch (IllegalArgumentException exception) {
@@ -151,7 +151,7 @@ public class AdminDashboardController {
             redirectAttributes.addFlashAttribute(
                     "successMessage",
                     "Week " + savedWeekPlan.getWeekNumber() + " was created for batch "
-                            + savedWeekPlan.getBatch().getBatchYear() + "."
+                            + savedWeekPlan.getBatch().getCompactLabel() + "."
             );
             return "redirect:/admin-dashboard/marks?batchId="
                     + savedWeekPlan.getBatch().getId()
@@ -198,7 +198,7 @@ public class AdminDashboardController {
             redirectAttributes.addFlashAttribute(
                     "successMessage",
                     "Week " + selectedWeekPlan.getWeekNumber() + " marks saved for batch "
-                            + selectedWeekPlan.getBatch().getBatchYear() + "."
+                            + selectedWeekPlan.getBatch().getCompactLabel() + "."
             );
             return "redirect:/admin-dashboard/marks?batchId="
                     + selectedBatchId
@@ -236,9 +236,9 @@ public class AdminDashboardController {
         WeekPlan selectedWeekPlan = resolveSelectedWeekPlan(weekPlans, requestedWeekPlanId);
         List<RegisteredUser> students = selectedBatch == null
                 ? List.of()
-                : registeredUserRepository.findAllByRoleAndBatchYearOrderByFullNameAsc(
+                : registeredUserRepository.findAllByRoleAndBatch_IdOrderByFullNameAsc(
                         UserRole.STUDENT,
-                        selectedBatch.getBatchYear()
+                        selectedBatch.getId()
                 );
         List<StudentMark> weekMarks = selectedWeekPlan == null
                 ? List.of()

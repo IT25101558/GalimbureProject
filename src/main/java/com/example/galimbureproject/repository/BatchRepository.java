@@ -8,9 +8,9 @@ import java.util.Optional;
 
 public interface BatchRepository extends JpaRepository<Batch, Long> {
 
-    List<Batch> findAllByOrderByBatchYearAsc();
+    List<Batch> findAllByOrderByBatchYearAscPlaceAsc();
 
-    Optional<Batch> findByBatchYear(Integer batchYear);
+    Optional<Batch> findFirstByBatchYearAndPlaceIgnoreCaseOrderByIdAsc(Integer batchYear, String place);
 
-    boolean existsByBatchYear(Integer batchYear);
+    boolean existsByBatchYearAndPlaceIgnoreCase(Integer batchYear, String place);
 }

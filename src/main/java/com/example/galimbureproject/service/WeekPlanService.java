@@ -58,7 +58,7 @@ public class WeekPlanService {
 
         if (weekPlanRepository.existsByBatch_IdAndWeekNumber(batchId, weekNumber)) {
             throw new IllegalArgumentException(
-                    "Week plan for batch " + batch.getBatchYear() + ", week " + weekNumber + " already exists."
+                    "Week plan for batch " + batch.getCompactLabel() + ", week " + weekNumber + " already exists."
             );
         }
 

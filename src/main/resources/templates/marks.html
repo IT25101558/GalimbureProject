@@ -483,7 +483,7 @@
                             <option value="" th:if="${#lists.isEmpty(batches)}">No batches available</option>
                             <option th:each="batch : ${batches}"
                                     th:value="${batch.id}"
-                                    th:text="${'Batch ' + batch.batchYear + ' - ' + batch.place + ' - ' + #temporals.format(batch.batchDate, 'dd MMM yyyy')}">Batch 2026</option>
+                                    th:text="${batch.displayLabel}">Batch 2026 - Gampaha - 01 Jan 2026</option>
                         </select>
                         <p class="field-error" th:if="${#fields.hasErrors('batchId')}" th:errors="*{batchId}"></p>
                     </div>
@@ -573,7 +573,7 @@
                         <option th:each="batch : ${batches}"
                                 th:value="${batch.id}"
                                 th:selected="${selectedBatchId != null and batch.id.equals(selectedBatchId)}"
-                                th:text="${'Batch ' + batch.batchYear + ' - ' + batch.place}">Batch 2026</option>
+                                th:text="${batch.displayLabel}">Batch 2026 - Gampaha - 01 Jan 2026</option>
                     </select>
                 </div>
 

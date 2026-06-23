@@ -17,7 +17,7 @@ public interface StudentMarkRepository extends JpaRepository<StudentMark, Long> 
             join fetch mark.weekPlan weekPlan
             join fetch weekPlan.batch
             where mark.student.id = :studentId
-            order by weekPlan.batch.batchYear asc, weekPlan.weekNumber asc
+            order by weekPlan.batch.batchYear asc, weekPlan.batch.place asc, weekPlan.weekNumber asc
             """)
     List<StudentMark> findForStudentOrdered(@Param("studentId") Long studentId);
 
@@ -38,7 +38,7 @@ public interface StudentMarkRepository extends JpaRepository<StudentMark, Long> 
             join fetch mark.student
             join fetch mark.weekPlan weekPlan
             join fetch weekPlan.batch
-            order by mark.student.fullName asc, weekPlan.batch.batchYear asc, weekPlan.weekNumber asc
+            order by mark.student.fullName asc, weekPlan.batch.batchYear asc, weekPlan.batch.place asc, weekPlan.weekNumber asc
             """)
     List<StudentMark> findAllOrderedWithStudent();
 

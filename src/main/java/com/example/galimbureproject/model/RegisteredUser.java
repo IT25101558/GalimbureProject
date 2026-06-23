@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -42,6 +44,10 @@ public class RegisteredUser {
 
     @Column(name = "batch_year")
     private Integer batchYear;
+
+    @ManyToOne
+    @JoinColumn(name = "batch_id")
+    private Batch batch;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
@@ -112,6 +118,14 @@ public class RegisteredUser {
 
     public void setBatchYear(Integer batchYear) {
         this.batchYear = batchYear;
+    }
+
+    public Batch getBatch() {
+        return batch;
+    }
+
+    public void setBatch(Batch batch) {
+        this.batch = batch;
     }
 
     public UserRole getRole() {

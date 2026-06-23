@@ -2,6 +2,7 @@ package com.example.galimbureproject.config;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import java.sql.Date;
 import java.time.LocalDate;
 
 @Component
+@Order(3)
 public class WeekPlanSchemaMigration implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
@@ -61,9 +63,10 @@ public class WeekPlanSchemaMigration implements ApplicationRunner {
 
     private Long resolveOrCreateLegacyBatch(Integer batchYear, LocalDate batchDate) {
         Long batchId = jdbcTemplate.query(
-                "select id from batch_table where batch_year = ?",
+                "select id from batch_table where batch_year = ? and lower(place) = lower(?)",
                 (rs, rowNum) -> rs.getLong(1),
-                batchYear
+                batchYear,
+                "Legacy batch"
         ).stream().findFirst().orElse(null);
 
         if (batchId != null) {
@@ -78,9 +81,10 @@ public class WeekPlanSchemaMigration implements ApplicationRunner {
         );
 
         return jdbcTemplate.query(
-                "select id from batch_table where batch_year = ?",
+                "select id from batch_table where batch_year = ? and lower(place) = lower(?)",
                 (rs, rowNum) -> rs.getLong(1),
-                batchYear
+                batchYear,
+                "Legacy batch"
         ).stream().findFirst().orElseThrow();
     }
 }

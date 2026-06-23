@@ -86,9 +86,9 @@ public class RegistrationController {
             if (lowerMessage.contains("email")) {
                 bindingResult.rejectValue("email", "email.exists", message);
             } else if (lowerMessage.contains("batch")) {
-                bindingResult.rejectValue("batchYear", "batch.notFound", message);
+                bindingResult.rejectValue("batchId", "batch.notFound", message);
             } else {
-                bindingResult.rejectValue("batchYear", "registration.failed", message);
+                bindingResult.rejectValue("batchId", "registration.failed", message);
             }
             populateRegistrationModel(model, registrationForm);
             return "register";

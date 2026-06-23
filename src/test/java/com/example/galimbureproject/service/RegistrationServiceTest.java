@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,13 +43,14 @@ class RegistrationServiceTest {
         form.setPhone(" 0777 123456 ");
         form.setAddress(" 12 Main Street ");
         form.setPassword("Password123");
-        form.setBatchYear(2026);
+        form.setBatchId(99L);
 
         Batch batch = new Batch();
         batch.setBatchYear(2026);
+        batch.setPlace("Gampaha");
 
         when(registeredUserRepository.existsByEmailIgnoreCase("alice@example.com")).thenReturn(false);
-        when(batchService.findByBatchYear(2026)).thenReturn(Optional.of(batch));
+        when(batchService.findById(99L)).thenReturn(Optional.of(batch));
         when(passwordEncoder.encode("Password123")).thenReturn("encoded-password");
         when(registeredUserRepository.save(any(RegisteredUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -59,10 +61,11 @@ class RegistrationServiceTest {
         assertEquals("0777 123456", saved.getPhone());
         assertEquals("12 Main Street", saved.getAddress());
         assertEquals(UserRole.STUDENT, saved.getRole());
+        assertSame(batch, saved.getBatch());
         assertEquals(2026, saved.getBatchYear());
         assertEquals("encoded-password", saved.getPasswordHash());
 
-        verify(batchService).findByBatchYear(2026);
+        verify(batchService).findById(99L);
         verify(registeredUserRepository).save(any(RegisteredUser.class));
     }
 }

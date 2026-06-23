@@ -444,7 +444,7 @@
                     </div>
                     <div class="detail-row">
                         <span>Batch year</span>
-                        <strong th:text="${user.batchYear != null ? user.batchYear : '-'}">2026</strong>
+                        <strong th:text="${user.batch != null ? user.batch.batchYear : (user.batchYear != null ? user.batchYear : '-')}">2026</strong>
                     </div>
                     <div class="detail-row">
                         <span>Address</span>

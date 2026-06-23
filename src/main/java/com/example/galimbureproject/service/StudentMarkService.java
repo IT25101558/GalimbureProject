@@ -2,6 +2,7 @@ package com.example.galimbureproject.service;
 
 import com.example.galimbureproject.dto.StudentMarkEntryForm;
 import com.example.galimbureproject.dto.StudentMarkForm;
+import com.example.galimbureproject.model.Batch;
 import com.example.galimbureproject.model.WeekPlan;
 import com.example.galimbureproject.model.RegisteredUser;
 import com.example.galimbureproject.model.StudentMark;
@@ -99,10 +100,20 @@ public class StudentMarkService {
             throw new IllegalArgumentException("Marks can only be assigned to students.");
         }
 
-        Integer studentBatchYear = student.getBatchYear();
-        Integer weekPlanBatchYear = weekPlan.getBatch() != null ? weekPlan.getBatch().getBatchYear() : null;
-        if (studentBatchYear == null || weekPlanBatchYear == null || !studentBatchYear.equals(weekPlanBatchYear)) {
-            throw new IllegalArgumentException("Selected student does not belong to the selected batch.");
+        Batch studentBatch = student.getBatch();
+        Batch weekPlanBatch = weekPlan.getBatch();
+        if (studentBatch != null && weekPlanBatch != null) {
+            Long studentBatchId = studentBatch.getId();
+            Long weekPlanBatchId = weekPlanBatch.getId();
+            if (studentBatchId == null || weekPlanBatchId == null || !studentBatchId.equals(weekPlanBatchId)) {
+                throw new IllegalArgumentException("Selected student does not belong to the selected batch.");
+            }
+        } else {
+            Integer studentBatchYear = student.getBatchYear();
+            Integer weekPlanBatchYear = weekPlanBatch != null ? weekPlanBatch.getBatchYear() : null;
+            if (studentBatchYear == null || weekPlanBatchYear == null || !studentBatchYear.equals(weekPlanBatchYear)) {
+                throw new IllegalArgumentException("Selected student does not belong to the selected batch.");
+            }
         }
 
         StudentMark mark = studentMarkRepository.findByStudent_IdAndWeekPlan_Id(student.getId(), weekPlan.getId())

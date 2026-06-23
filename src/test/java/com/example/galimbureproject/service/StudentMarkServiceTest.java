@@ -44,14 +44,21 @@ class StudentMarkServiceTest {
     void saveWeekMarksRejectsStudentsOutsideSelectedBatch() {
         WeekPlan weekPlan = new WeekPlan();
         ReflectionTestUtils.setField(weekPlan, "id", 1L);
-        Batch batch = new Batch();
-        batch.setBatchYear(2026);
-        weekPlan.setBatch(batch);
+        Batch weekPlanBatch = new Batch();
+        ReflectionTestUtils.setField(weekPlanBatch, "id", 11L);
+        weekPlanBatch.setBatchYear(2026);
+        weekPlanBatch.setPlace("Gampaha");
+        weekPlan.setBatch(weekPlanBatch);
 
         RegisteredUser student = new RegisteredUser();
         ReflectionTestUtils.setField(student, "id", 7L);
         student.setRole(UserRole.STUDENT);
-        student.setBatchYear(2025);
+        student.setBatchYear(2026);
+        Batch studentBatch = new Batch();
+        ReflectionTestUtils.setField(studentBatch, "id", 12L);
+        studentBatch.setBatchYear(2026);
+        studentBatch.setPlace("Mirigama");
+        student.setBatch(studentBatch);
 
         StudentMarkEntryForm entry = new StudentMarkEntryForm();
         entry.setStudentId(7L);

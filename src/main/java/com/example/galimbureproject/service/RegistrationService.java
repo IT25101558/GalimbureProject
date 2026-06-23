@@ -40,9 +40,13 @@ public class RegistrationService {
         user.setAddress(form.getAddress().trim());
         user.setPasswordHash(passwordEncoder.encode(form.getPassword()));
         user.setRole(UserRole.STUDENT);
-        Integer batchYear = form.getBatchYear();
-        Batch batch = batchService.findByBatchYear(batchYear)
+        Long batchId = form.getBatchId();
+        if (batchId == null) {
+            throw new IllegalArgumentException("Batch is required.");
+        }
+        Batch batch = batchService.findById(batchId)
                 .orElseThrow(() -> new IllegalArgumentException("Selected batch was not found."));
+        user.setBatch(batch);
         user.setBatchYear(batch.getBatchYear());
 
         return registeredUserRepository.save(user);

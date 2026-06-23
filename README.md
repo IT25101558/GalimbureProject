@@ -7,7 +7,7 @@ Spring Boot authentication app with registration, login, and a protected dashboa
 - `GET /login` shows the custom login page for existing accounts.
 - `POST /login` is handled by Spring Security and returns the user to `/dashboard`.
 - `GET /register` shows the registration form.
-- `POST /register` validates the new user's batch year, saves the account, and signs them in automatically.
+- `POST /register` validates the selected batch, saves the account, and signs them in automatically.
 - `GET /dashboard` shows the protected dashboard after login or registration.
 - `GET /admin-dashboard` shows the admin dashboard for users with `ADMIN` role.
 - `POST /admin-dashboard/batches` creates a batch row from the admin dashboard.
@@ -22,7 +22,7 @@ Spring Boot authentication app with registration, login, and a protected dashboa
 - Passwords are stored as BCrypt hashes.
 - The app reads the database connection from environment variables.
 - New registrations are stored with the `STUDENT` role by default. To use the admin dashboard, at least one database user must have the `ADMIN` role.
-- New student registrations include a batch year so the marks page can filter the correct cohort.
+- New student registrations include a batch selection so the marks page can filter the correct cohort.
 
 ## Render Setup
 
@@ -107,6 +107,7 @@ phone
 address
 password_hash
 batch_year
+batch_id
 role
 created_at
 ```
@@ -139,7 +140,7 @@ batch_date
 
 Rules:
 
-- Batch year is unique.
+- Batch year and place together are unique.
 - The admin creates batches from the admin dashboard before creating week plans.
 
 ## Student Marks Table

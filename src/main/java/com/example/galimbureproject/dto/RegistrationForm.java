@@ -1,8 +1,6 @@
 package com.example.galimbureproject.dto;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -27,10 +25,8 @@ public class RegistrationForm {
     @Size(max = 300, message = "Address must be 300 characters or fewer.")
     private String address;
 
-    @NotNull(message = "Batch year is required.")
-    @Min(value = 1900, message = "Batch year must be valid.")
-    @Max(value = 2100, message = "Batch year must be valid.")
-    private Integer batchYear;
+    @NotNull(message = "Batch is required.")
+    private Long batchId;
 
     @NotBlank(message = "Password is required.")
     @Size(min = 8, max = 72, message = "Password must be between 8 and 72 characters.")
@@ -68,12 +64,12 @@ public class RegistrationForm {
         this.address = address;
     }
 
-    public Integer getBatchYear() {
-        return batchYear;
+    public Long getBatchId() {
+        return batchId;
     }
 
-    public void setBatchYear(Integer batchYear) {
-        this.batchYear = batchYear;
+    public void setBatchId(Long batchId) {
+        this.batchId = batchId;
     }
 
     public String getPassword() {

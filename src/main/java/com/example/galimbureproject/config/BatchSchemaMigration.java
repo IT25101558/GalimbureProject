@@ -20,6 +20,8 @@ public class BatchSchemaMigration implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        ensureBatchDateColumnIsText();
+
         jdbcTemplate.execute("ALTER TABLE batch_table DROP CONSTRAINT IF EXISTS uk_batch_table_batch_year");
 
         Boolean compositeConstraintExists = jdbcTemplate.queryForObject(
@@ -36,6 +38,55 @@ public class BatchSchemaMigration implements ApplicationRunner {
             jdbcTemplate.execute(
                     "ALTER TABLE batch_table ADD CONSTRAINT uk_batch_table_batch_year_place UNIQUE (batch_year, place)"
             );
+        }
+    }
+
+    private void ensureBatchDateColumnIsText() {
+        Boolean batchTableExists = jdbcTemplate.queryForObject(
+                """
+                        select count(*) > 0
+                        from information_schema.tables
+                        where lower(table_name) = lower(?)
+                        """,
+                Boolean.class,
+                "batch_table"
+        );
+
+        if (!Boolean.TRUE.equals(batchTableExists)) {
+            return;
+        }
+
+        Boolean batchDateColumnExists = jdbcTemplate.queryForObject(
+                """
+                        select count(*) > 0
+                        from information_schema.columns
+                        where lower(table_name) = lower(?)
+                          and lower(column_name) = lower(?)
+                        """,
+                Boolean.class,
+                "batch_table",
+                "batch_date"
+        );
+
+        if (!Boolean.TRUE.equals(batchDateColumnExists)) {
+            return;
+        }
+
+        String dataType = jdbcTemplate.queryForObject(
+                """
+                        select data_type
+                        from information_schema.columns
+                        where lower(table_name) = lower(?)
+                          and lower(column_name) = lower(?)
+                        limit 1
+                        """,
+                String.class,
+                "batch_table",
+                "batch_date"
+        );
+
+        if (dataType != null && !dataType.equalsIgnoreCase("text")) {
+            jdbcTemplate.execute("ALTER TABLE batch_table ALTER COLUMN batch_date TYPE text USING batch_date::text");
         }
     }
 }

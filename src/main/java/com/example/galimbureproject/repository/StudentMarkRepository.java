@@ -15,9 +15,11 @@ public interface StudentMarkRepository extends JpaRepository<StudentMark, Long> 
             from StudentMark mark
             join fetch mark.student
             join fetch mark.weekPlan weekPlan
-            join fetch weekPlan.batch
+            join fetch weekPlan.monthPlan monthPlan
+            join fetch monthPlan.yearPlan yearPlan
+            join fetch yearPlan.batch
             where mark.student.id = :studentId
-            order by weekPlan.batch.batchYear asc, weekPlan.batch.place asc, weekPlan.weekNumber asc
+            order by yearPlan.batch.batchYear asc, yearPlan.yearValue asc, monthPlan.monthNumber asc, weekPlan.weekNumber asc
             """)
     List<StudentMark> findForStudentOrdered(@Param("studentId") Long studentId);
 
@@ -26,7 +28,9 @@ public interface StudentMarkRepository extends JpaRepository<StudentMark, Long> 
             from StudentMark mark
             join fetch mark.student
             join fetch mark.weekPlan weekPlan
-            join fetch weekPlan.batch
+            join fetch weekPlan.monthPlan monthPlan
+            join fetch monthPlan.yearPlan yearPlan
+            join fetch yearPlan.batch
             where weekPlan.id = :weekPlanId
             order by mark.student.fullName asc
             """)
@@ -37,8 +41,10 @@ public interface StudentMarkRepository extends JpaRepository<StudentMark, Long> 
             from StudentMark mark
             join fetch mark.student
             join fetch mark.weekPlan weekPlan
-            join fetch weekPlan.batch
-            order by mark.student.fullName asc, weekPlan.batch.batchYear asc, weekPlan.batch.place asc, weekPlan.weekNumber asc
+            join fetch weekPlan.monthPlan monthPlan
+            join fetch monthPlan.yearPlan yearPlan
+            join fetch yearPlan.batch
+            order by mark.student.fullName asc, yearPlan.batch.batchYear asc, yearPlan.yearValue asc, monthPlan.monthNumber asc, weekPlan.weekNumber asc
             """)
     List<StudentMark> findAllOrderedWithStudent();
 

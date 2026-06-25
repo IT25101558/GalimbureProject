@@ -1,13 +1,14 @@
 package com.example.galimbureproject.service;
 
-import com.example.galimbureproject.dto.WeekPlanForm;
-import com.example.galimbureproject.model.Batch;
+import com.example.galimbureproject.model.MonthPlan;
 import com.example.galimbureproject.model.WeekPlan;
-import com.example.galimbureproject.repository.BatchRepository;
 import com.example.galimbureproject.repository.WeekPlanRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,59 +16,69 @@ import java.util.Optional;
 public class WeekPlanService {
 
     private final WeekPlanRepository weekPlanRepository;
-    private final BatchRepository batchRepository;
 
-    public WeekPlanService(WeekPlanRepository weekPlanRepository, BatchRepository batchRepository) {
+    public WeekPlanService(WeekPlanRepository weekPlanRepository) {
         this.weekPlanRepository = weekPlanRepository;
-        this.batchRepository = batchRepository;
     }
 
     @Transactional(readOnly = true)
     public List<WeekPlan> getAllWeekPlans() {
-        return weekPlanRepository.findAllOrderedWithBatch();
+        return weekPlanRepository.findAllOrderedWithHierarchy();
     }
 
     @Transactional(readOnly = true)
-    public List<WeekPlan> getWeekPlansForBatch(Long batchId) {
-        if (batchId == null) {
+    public long countAllWeekPlans() {
+        return weekPlanRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    public List<WeekPlan> getWeekPlansForMonth(Long monthPlanId) {
+        if (monthPlanId == null) {
             return List.of();
         }
 
-        return weekPlanRepository.findAllByBatch_IdOrderByWeekNumberAsc(batchId);
+        return weekPlanRepository.findAllByMonthPlan_IdOrderByWeekNumberAsc(monthPlanId);
     }
 
     @Transactional(readOnly = true)
     public Optional<WeekPlan> findById(Long id) {
-        return weekPlanRepository.findByIdWithBatch(id);
+        return weekPlanRepository.findByIdWithHierarchy(id);
     }
 
     @Transactional
-    public WeekPlan createWeekPlan(WeekPlanForm form) {
-        Long batchId = form.getBatchId();
-        Integer weekNumber = form.getWeekNumber();
-        if (batchId == null) {
-            throw new IllegalArgumentException("Batch is required.");
+    public List<WeekPlan> createDefaultWeeksForMonth(MonthPlan monthPlan) {
+        if (monthPlan == null || monthPlan.getId() == null || monthPlan.getYearPlan() == null) {
+            throw new IllegalArgumentException("Month is required.");
         }
 
-        if (weekNumber == null) {
-            throw new IllegalArgumentException("Week number is required.");
+        Integer yearValue = monthPlan.getYearValue();
+        Integer monthNumber = monthPlan.getMonthNumber();
+        if (yearValue == null || monthNumber == null) {
+            throw new IllegalArgumentException("Month is required.");
         }
 
-        Batch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new IllegalArgumentException("Selected batch was not found."));
+        List<WeekPlan> existingWeeks = getWeekPlansForMonth(monthPlan.getId());
+        List<WeekPlan> createdWeeks = new ArrayList<>();
+        YearMonth yearMonth = YearMonth.of(yearValue, monthNumber);
+        LocalDate monthStart = yearMonth.atDay(1);
 
-        if (weekPlanRepository.existsByBatch_IdAndWeekNumber(batchId, weekNumber)) {
-            throw new IllegalArgumentException(
-                    "Week plan for batch " + batch.getCompactLabel() + ", week " + weekNumber + " already exists."
-            );
+        for (int weekNumber = 1; weekNumber <= 5; weekNumber++) {
+            final int currentWeekNumber = weekNumber;
+            boolean alreadyExists = existingWeeks.stream()
+                    .anyMatch(weekPlan -> weekPlan.getWeekNumber() != null && weekPlan.getWeekNumber().equals(currentWeekNumber));
+            if (alreadyExists) {
+                continue;
+            }
+
+            WeekPlan weekPlan = new WeekPlan();
+            weekPlan.setMonthPlan(monthPlan);
+            weekPlan.setWeekNumber(currentWeekNumber);
+            weekPlan.setTask("Week " + currentWeekNumber);
+            weekPlan.setWeekStartDate(monthStart.plusWeeks(currentWeekNumber - 1L));
+            weekPlan.setWeekEndDate(monthStart.plusWeeks(currentWeekNumber - 1L).plusDays(6));
+            createdWeeks.add(weekPlanRepository.save(weekPlan));
         }
 
-        WeekPlan weekPlan = new WeekPlan();
-        weekPlan.setBatch(batch);
-        weekPlan.setWeekNumber(weekNumber);
-        weekPlan.setTask(form.getTask() == null ? "" : form.getTask().trim());
-        weekPlan.setWeekStartDate(form.getWeekStartDate());
-        weekPlan.setWeekEndDate(form.getWeekEndDate());
-        return weekPlanRepository.save(weekPlan);
+        return createdWeeks;
     }
 }

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+    <style>
+        :root {
+            --ink: #132126;
+            --muted: #5b6d72;
+            --panel: #ffffff;
+            --wash: #eaf1f0;
+            --line: #d0dcde;
+            --accent: #0d6b63;
+            --accent-strong: #084d48;
+            --gold: #f2c45d;
+            --soft: #f7fafb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+            background:
+                    radial-gradient(circle at top right, rgba(242, 196, 93, 0.18), transparent 26%),
+                    radial-gradient(circle at bottom left, rgba(13, 107, 99, 0.16), transparent 32%),
+                    repeating-linear-gradient(90deg, rgba(19, 33, 38, 0.04) 0, rgba(19, 33, 38, 0.04) 1px, transparent 1px, transparent 80px),
+                    var(--wash);
+        }
+
+        main {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+            padding: 28px 18px 44px;
+        }
+
+        .shell {
+            display: grid;
+            gap: 22px;
+        }
+
+        .topbar,
+        .panel {
+            border: 1px solid rgba(19, 33, 38, 0.12);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 22px 66px rgba(19, 33, 38, 0.08);
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 22px 24px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: grid;
+            gap: 4px;
+        }
+
+        .brand span {
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.82rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: clamp(1.7rem, 3vw, 2.4rem);
+            line-height: 1;
+        }
+
+        .brand p {
+            margin: 0;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+        }
+
+        .main-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .menu-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 10px 14px;
+            background: rgba(247, 250, 251, 0.96);
+            color: var(--ink);
+            font: 700 0.92rem "Segoe UI", Verdana, sans-serif;
+            text-decoration: none;
+            transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .menu-link:hover {
+            background: #ffffff;
+            border-color: rgba(13, 107, 99, 0.28);
+            transform: translateY(-1px);
+        }
+
+        .menu-link.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        .panel {
+            padding: 24px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .section-title {
+            margin: 0 0 16px;
+            font-size: 1.45rem;
+            line-height: 1.1;
+        }
+
+        .lead {
+            margin: 0 0 16px;
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.65;
+            color: var(--muted);
+        }
+
+        .tag {
+            display: inline-flex;
+            margin-bottom: 16px;
+            border: 1px solid rgba(13, 107, 99, 0.22);
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: rgba(13, 107, 99, 0.08);
+            color: var(--accent);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.76rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .detail-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .detail-row {
+            display: grid;
+            gap: 4px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(19, 33, 38, 0.08);
+        }
+
+        .detail-row:last-child {
+            padding-bottom: 0;
+            border-bottom: 0;
+        }
+
+        .detail-row span {
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .detail-row strong,
+        .detail-row p {
+            margin: 0;
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.6;
+        }
+
+        .detail-row p {
+            color: var(--ink);
+        }
+
+        .plain-link {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .plain-link:hover {
+            text-decoration: underline;
+        }
+
+        .contact-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .action-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--accent);
+            border-radius: 999px;
+            padding: 11px 15px;
+            background: var(--accent);
+            color: #ffffff;
+            font: 700 0.92rem "Segoe UI", Verdana, sans-serif;
+            text-decoration: none;
+            transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .action-link:hover {
+            background: var(--accent-strong);
+            border-color: var(--accent-strong);
+            transform: translateY(-1px);
+        }
+
+        .note {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(242, 196, 93, 0.18), rgba(13, 107, 99, 0.08));
+            border: 1px solid rgba(242, 196, 93, 0.28);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 840px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding-inline: 14px;
+            }
+
+            .panel,
+            .topbar {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section class="shell">
+        <header class="topbar">
+            <div class="brand">
+                <span>Public Pages</span>
+                <h1>Contact us</h1>
+                <p>Reach the project team using the details below.</p>
+            </div>
+
+            <nav class="main-menu" aria-label="Main menu">
+                <a class="menu-link" th:href="@{/dashboard}">Dashboard</a>
+                <a class="menu-link" th:if="${isAdmin}" th:href="@{/admin-dashboard}">Admin dashboard</a>
+                <a class="menu-link" th:href="@{/about-us}">About us</a>
+                <a class="menu-link active" th:href="@{/contact-us}">Contact us</a>
+            </nav>
+        </header>
+
+        <section class="layout">
+            <article class="panel">
+                <div class="tag">Get in touch</div>
+                <h2 class="section-title">Contact details</h2>
+                <p class="lead">
+                    Use the contact channels below for account questions, batch setup issues, or marks-related
+                    requests. The dashboards stay separate from this public page so the main app remains focused.
+                </p>
+                <div class="detail-list">
+                    <div class="detail-row">
+                        <span>Email</span>
+                        <strong><a class="plain-link" href="mailto:support@example.com">support@example.com</a></strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Phone</span>
+                        <strong><a class="plain-link" href="tel:+94110000000">+94 11 000 0000</a></strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Location</span>
+                        <p>Project support desk, Sri Lanka</p>
+                    </div>
+                    <div class="detail-row">
+                        <span>Support hours</span>
+                        <p>Weekdays, 8:30 AM to 5:00 PM</p>
+                    </div>
+                </div>
+
+                <div class="contact-actions">
+                    <a class="action-link" href="mailto:support@example.com">Email support</a>
+                    <a class="action-link" href="tel:+94110000000">Call now</a>
+                </div>
+            </article>
+
+            <aside class="panel">
+                <h2 class="section-title">What to include</h2>
+                <div class="detail-list">
+                    <div class="detail-row">
+                        <span>Account</span>
+                        <strong>Full name and registered email address.</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Batch</span>
+                        <strong>The batch name and place if the issue is batch-specific.</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Issue</span>
+                        <strong>A short description of what is not working.</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Reference</span>
+                        <strong>Any week number, screenshot, or page link that helps reproduce it.</strong>
+                    </div>
+                </div>
+                <div class="note">
+                    The dashboard links remain available in the top menu if you need to jump back into the app.
+                </div>
+            </aside>
+        </section>
+    </section>
+</main>
+</body>
+</html>

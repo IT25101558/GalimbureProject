@@ -2,9 +2,11 @@ package com.example.galimbureproject.service;
 
 import com.example.galimbureproject.dto.StudentMarkEntryForm;
 import com.example.galimbureproject.model.Batch;
+import com.example.galimbureproject.model.MonthPlan;
 import com.example.galimbureproject.model.RegisteredUser;
 import com.example.galimbureproject.model.UserRole;
 import com.example.galimbureproject.model.WeekPlan;
+import com.example.galimbureproject.model.YearPlan;
 import com.example.galimbureproject.repository.RegisteredUserRepository;
 import com.example.galimbureproject.repository.StudentMarkRepository;
 import com.example.galimbureproject.repository.WeekPlanRepository;
@@ -44,11 +46,19 @@ class StudentMarkServiceTest {
     void saveWeekMarksRejectsStudentsOutsideSelectedBatch() {
         WeekPlan weekPlan = new WeekPlan();
         ReflectionTestUtils.setField(weekPlan, "id", 1L);
+        YearPlan yearPlan = new YearPlan();
+        ReflectionTestUtils.setField(yearPlan, "id", 21L);
         Batch weekPlanBatch = new Batch();
         ReflectionTestUtils.setField(weekPlanBatch, "id", 11L);
         weekPlanBatch.setBatchYear(2026);
         weekPlanBatch.setPlace("Gampaha");
-        weekPlan.setBatch(weekPlanBatch);
+        yearPlan.setBatch(weekPlanBatch);
+        yearPlan.setYearValue(2026);
+        MonthPlan monthPlan = new MonthPlan();
+        ReflectionTestUtils.setField(monthPlan, "id", 31L);
+        monthPlan.setYearPlan(yearPlan);
+        monthPlan.setMonthNumber(1);
+        weekPlan.setMonthPlan(monthPlan);
 
         RegisteredUser student = new RegisteredUser();
         ReflectionTestUtils.setField(student, "id", 7L);
@@ -64,7 +74,7 @@ class StudentMarkServiceTest {
         entry.setStudentId(7L);
         entry.setMark(82);
 
-        when(weekPlanRepository.findByIdWithBatch(1L)).thenReturn(Optional.of(weekPlan));
+        when(weekPlanRepository.findByIdWithHierarchy(1L)).thenReturn(Optional.of(weekPlan));
         when(registeredUserRepository.findById(7L)).thenReturn(Optional.of(student));
 
         IllegalArgumentException exception = assertThrows(

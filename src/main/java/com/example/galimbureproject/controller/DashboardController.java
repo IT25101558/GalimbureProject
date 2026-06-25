@@ -14,6 +14,10 @@ import com.example.galimbureproject.service.StudentMarkService;
 import com.example.galimbureproject.model.UserRole;
 import com.example.galimbureproject.model.StudentMark;
 
+import java.time.Month;
+import java.time.format.TextStyle;
+import java.util.Locale;
+
 import java.util.List;
 
 @Controller
@@ -51,7 +55,13 @@ public class DashboardController {
                             "markLabels",
                             studentMarks.stream().map(mark -> {
                                 if (mark.getWeekPlan() != null && mark.getWeekPlan().getBatch() != null) {
+                                    String monthLabel = mark.getWeekPlan().getMonthNumber() == null
+                                            ? "Month -"
+                                            : Month.of(mark.getWeekPlan().getMonthNumber())
+                                            .getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
                                     return "B" + mark.getWeekPlan().getBatch().getBatchYear()
+                                            + " Y" + (mark.getWeekPlan().getYearValue() != null ? mark.getWeekPlan().getYearValue() : "-")
+                                            + " " + monthLabel
                                             + " W" + mark.getWeekNumber();
                                 }
 

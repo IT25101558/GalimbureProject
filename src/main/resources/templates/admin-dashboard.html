@@ -60,6 +60,7 @@
             justify-content: space-between;
             gap: 18px;
             padding: 22px 24px;
+            flex-wrap: wrap;
         }
 
         .brand {
@@ -86,6 +87,46 @@
             margin: 0;
             color: var(--muted);
             font-family: "Segoe UI", Verdana, sans-serif;
+        }
+
+        .main-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .section-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .menu-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 10px 14px;
+            background: rgba(247, 250, 251, 0.96);
+            color: var(--ink);
+            font: 700 0.92rem "Segoe UI", Verdana, sans-serif;
+            text-decoration: none;
+            transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .menu-link:hover {
+            background: #ffffff;
+            border-color: rgba(13, 107, 99, 0.28);
+            transform: translateY(-1px);
+        }
+
+        .menu-link.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
         }
 
         .top-actions {
@@ -161,7 +202,7 @@
 
         .summary {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 16px;
         }
 
@@ -312,6 +353,18 @@
             align-items: start;
         }
 
+        .year-panel {
+            display: grid;
+            gap: 18px;
+        }
+
+        .year-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+            gap: 18px;
+            align-items: start;
+        }
+
         .batch-form {
             display: grid;
             gap: 14px;
@@ -358,6 +411,14 @@
             min-width: 820px;
         }
 
+        .year-table {
+            min-width: 860px;
+        }
+
+        .users-note {
+            margin-bottom: 18px;
+        }
+
         .plan-link {
             color: var(--accent);
             font-weight: 700;
@@ -381,6 +442,10 @@
             .batch-layout {
                 grid-template-columns: 1fr;
             }
+
+            .year-layout {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 640px) {
@@ -402,11 +467,18 @@
             <div class="brand">
                 <span>Admin Dashboard</span>
                 <h1>Batch management</h1>
-                <p>Created batches are used by the weekly marks page.</p>
+                <p>Batches seed years, months, weeks, and the payment-status page.</p>
             </div>
 
             <div class="top-actions">
-                <a class="nav-link" th:href="@{/admin-dashboard/marks}">Weekly marks</a>
+                <nav class="main-menu" aria-label="Main menu">
+                    <a class="menu-link" th:href="@{/dashboard}">Dashboard</a>
+                    <a class="menu-link active" th:href="@{/admin-dashboard}">Admin dashboard</a>
+                    <a class="menu-link" th:href="@{/admin-dashboard/marks}">Weekly marks</a>
+                    <a class="menu-link" th:href="@{/admin-dashboard/paid-status}">Paid status</a>
+                    <a class="menu-link" th:href="@{/about-us}">About us</a>
+                    <a class="menu-link" th:href="@{/contact-us}">Contact us</a>
+                </nav>
                 <div class="pill">
                     <span>Users</span>
                     <strong th:text="${totalUsers}">0</strong>
@@ -417,6 +489,13 @@
                 </form>
             </div>
         </header>
+
+        <nav class="section-tabs" aria-label="Dashboard sections">
+            <a class="menu-link" href="#batch-panel">Batch creation</a>
+            <a class="menu-link" href="#year-panel">Year creation</a>
+            <a class="menu-link" th:href="@{/admin-dashboard/paid-status}">Paid status</a>
+            <a class="menu-link" href="#users-panel">Registered users</a>
+        </nav>
 
         <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
         <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
@@ -438,12 +517,20 @@
                 <span>Batches</span>
                 <strong th:text="${batchCount}">0</strong>
             </div>
+            <div class="metric">
+                <span>Years</span>
+                <strong th:text="${yearCount}">0</strong>
+            </div>
+            <div class="metric">
+                <span>Months</span>
+                <strong th:text="${monthCount}">0</strong>
+            </div>
         </section>
 
-        <section class="panel batch-panel">
+        <section class="panel batch-panel" id="batch-panel">
             <div>
                 <h2 class="section-title">Create batch</h2>
-                <p class="section-copy">Add a batch year, place, and date before creating week plans and marks.</p>
+                <p class="section-copy">Add a batch year, place, and plain-text batch date. Saving the batch automatically creates two years, then their months and weeks.</p>
             </div>
 
             <div class="batch-layout">
@@ -458,8 +545,8 @@
                         </div>
 
                         <div class="field">
-                            <label for="batchDate">Date</label>
-                            <input id="batchDate" type="text" placeholder="Class date" th:field="*{batchDate}">
+                            <label for="batchDate">Batch date</label>
+                            <input id="batchDate" type="text" placeholder="Any text" th:field="*{batchDate}">
                             <p class="field-error" th:if="${#fields.hasErrors('batchDate')}" th:errors="*{batchDate}"></p>
                         </div>
                     </div>
@@ -476,7 +563,7 @@
                 </form>
 
                 <aside class="note">
-                    Use the weekly marks page to create week plans for a batch and enter marks for the selected week.
+                    Use the year tab to add more year rows if needed. The marks page filters batch, year, month, and week in that order, while the payment page follows batch, year, and month.
                 </aside>
             </div>
 
@@ -486,7 +573,7 @@
                     <tr>
                         <th>Year</th>
                         <th>Place</th>
-                        <th>Date</th>
+                        <th>Batch date</th>
                         <th>Open marks</th>
                     </tr>
                     </thead>
@@ -494,7 +581,7 @@
                     <tr th:each="batch : ${batches}">
                         <td th:text="${batch.batchYear}">2026</td>
                         <td th:text="${batch.place}">Colombo</td>
-                        <td th:text="${#temporals.format(batch.batchDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                        <td th:text="${batch.batchDate != null and !batch.batchDate.isBlank() ? batch.batchDate : '-'}">Saturday, Sunday</td>
                         <td><a class="plan-link" th:href="@{/admin-dashboard/marks(batchId=${batch.id})}">Open marks</a></td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(batches)}">
@@ -505,8 +592,75 @@
             </div>
         </section>
 
-        <section class="panel">
+        <section class="panel year-panel" id="year-panel">
+            <div>
+                <h2 class="section-title">Create year</h2>
+                <p class="section-copy">Select a batch and year value. Creating a year automatically creates 12 months and five weeks per month.</p>
+            </div>
+
+            <div class="year-layout">
+                <form class="batch-form" th:action="@{/admin-dashboard/years}" th:object="${yearPlanForm}" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="yearBatchId">Batch</label>
+                            <select id="yearBatchId" th:field="*{batchId}" th:disabled="${#lists.isEmpty(batches)}">
+                                <option value="" th:if="${#lists.isEmpty(batches)}">No batches available</option>
+                                <option th:each="batch : ${batches}"
+                                        th:value="${batch.id}"
+                                        th:text="${batch.displayLabel}">Batch 2026 - Gampaha - 01 Jan 2026</option>
+                            </select>
+                            <p class="field-error" th:if="${#fields.hasErrors('batchId')}" th:errors="*{batchId}"></p>
+                        </div>
+
+                        <div class="field">
+                            <label for="yearValue">Year</label>
+                            <input id="yearValue" type="number" min="1900" max="2100" step="1" th:field="*{yearValue}">
+                            <p class="field-error" th:if="${#fields.hasErrors('yearValue')}" th:errors="*{yearValue}"></p>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <button class="save-button" type="submit" th:disabled="${#lists.isEmpty(batches)}">Create year</button>
+                    </div>
+                </form>
+
+                <aside class="note">
+                    Every year row carries its own months and weeks. Use this tab when a batch needs an additional year beyond the default two.
+                </aside>
+            </div>
+
+            <div class="table-wrap">
+                <table class="year-table">
+                    <thead>
+                    <tr>
+                        <th>Batch</th>
+                        <th>Year</th>
+                        <th>Open marks</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="year : ${yearPlans}">
+                        <td th:text="${year.batch != null ? year.batch.compactLabel : '-'}">Batch 2026 - Gampaha</td>
+                        <td th:text="${year.yearValue}">2026</td>
+                        <td>
+                            <a class="plan-link" th:href="@{/admin-dashboard/marks(batchId=${year.batch.id}, yearPlanId=${year.id})}">Open marks</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(yearPlans)}">
+                        <td colspan="3" class="muted">No years have been created yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel" id="users-panel">
             <h2 class="section-title">Registered users</h2>
+            <div class="users-note muted">
+                The role dropdown stays per user. Payment status is managed on the dedicated paid status page.
+            </div>
             <div class="table-wrap">
                 <table>
                     <thead>

@@ -6,8 +6,6 @@ import com.example.galimbureproject.repository.BatchRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,9 +13,11 @@ import java.util.Optional;
 public class BatchService {
 
     private final BatchRepository batchRepository;
+    private final YearPlanService yearPlanService;
 
-    public BatchService(BatchRepository batchRepository) {
+    public BatchService(BatchRepository batchRepository, YearPlanService yearPlanService) {
         this.batchRepository = batchRepository;
+        this.yearPlanService = yearPlanService;
     }
 
     @Transactional(readOnly = true)
@@ -46,18 +46,17 @@ public class BatchService {
             throw new IllegalArgumentException("Batch " + batchYear + " - " + place + " already exists.");
         }
 
-        String batchDateText = form.getBatchDate() == null ? "" : form.getBatchDate().trim();
-        LocalDate batchDate;
-        try {
-            batchDate = LocalDate.parse(batchDateText);
-        } catch (DateTimeParseException exception) {
-            throw new IllegalArgumentException("Date must be in yyyy-MM-dd format.");
+        String batchDate = form.getBatchDate() == null ? "" : form.getBatchDate().trim();
+        if (batchDate.isEmpty()) {
+            throw new IllegalArgumentException("Batch date is required.");
         }
 
         Batch batch = new Batch();
         batch.setBatchYear(batchYear);
         batch.setPlace(place);
         batch.setBatchDate(batchDate);
-        return batchRepository.save(batch);
+        Batch savedBatch = batchRepository.save(batch);
+        yearPlanService.createDefaultYearsForBatch(savedBatch);
+        return savedBatch;
     }
 }

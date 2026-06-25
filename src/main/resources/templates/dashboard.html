@@ -57,6 +57,7 @@
             background: rgba(255, 255, 255, 0.86);
             box-shadow: 0 20px 60px rgba(19, 33, 38, 0.08);
             backdrop-filter: blur(8px);
+            flex-wrap: wrap;
         }
 
         .brand {
@@ -83,6 +84,39 @@
             margin: 0;
             color: var(--muted);
             font-family: "Segoe UI", Verdana, sans-serif;
+        }
+
+        .main-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .menu-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 10px 14px;
+            background: rgba(247, 250, 251, 0.96);
+            color: var(--ink);
+            font: 700 0.92rem "Segoe UI", Verdana, sans-serif;
+            text-decoration: none;
+            transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .menu-link:hover {
+            background: #ffffff;
+            border-color: rgba(13, 107, 99, 0.28);
+            transform: translateY(-1px);
+        }
+
+        .menu-link.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
         }
 
         .logout-form button {
@@ -383,6 +417,13 @@
                 <p th:text="${user.email}">user@example.com</p>
             </div>
 
+            <nav class="main-menu" aria-label="Main menu">
+                <a class="menu-link active" th:href="@{/dashboard}">Dashboard</a>
+                <a class="menu-link" th:href="@{/about-us}">About us</a>
+                <a class="menu-link" th:href="@{/contact-us}">Contact us</a>
+                <a class="menu-link" th:if="${isAdmin}" th:href="@{/admin-dashboard}">Admin dashboard</a>
+            </nav>
+
             <form class="logout-form" th:action="@{/logout}" method="post">
                 <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button type="submit">Log out</button>
@@ -494,6 +535,8 @@
                     <thead>
                     <tr>
                         <th>Batch</th>
+                        <th>Year</th>
+                        <th>Month</th>
                         <th>Week</th>
                         <th>Mark</th>
                         <th>Saved</th>
@@ -502,12 +545,14 @@
                     <tbody>
                     <tr th:each="mark : ${studentMarks}">
                         <td th:text="${mark.weekPlan != null and mark.weekPlan.batch != null ? 'Batch ' + mark.weekPlan.batch.batchYear : 'Batch -'}">Batch 2026</td>
+                        <td th:text="${mark.weekPlan != null and mark.weekPlan.yearValue != null ? mark.weekPlan.yearValue : '-'}">2026</td>
+                        <td th:text="${mark.weekPlan != null ? mark.weekPlan.monthLabel : '-'}">January</td>
                         <td th:text="${mark.weekNumber}">1</td>
                         <td th:text="${mark.mark}">80</td>
                         <td th:text="${#temporals.format(mark.updatedAt != null ? mark.updatedAt : mark.createdAt, 'dd MMM yyyy')}">01 Jan 2026</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(studentMarks)}">
-                        <td colspan="4" class="muted">No marks available.</td>
+                        <td colspan="6" class="muted">No marks available.</td>
                     </tr>
                     </tbody>
                 </table>

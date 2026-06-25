@@ -1,18 +1,26 @@
 package com.example.galimbureproject.controller;
 
 import com.example.galimbureproject.dto.BatchForm;
+import com.example.galimbureproject.dto.StudentMonthPaymentBatchForm;
+import com.example.galimbureproject.dto.StudentMonthPaymentEntryForm;
 import com.example.galimbureproject.dto.StudentMarkBatchForm;
 import com.example.galimbureproject.dto.StudentMarkEntryForm;
-import com.example.galimbureproject.dto.WeekPlanForm;
+import com.example.galimbureproject.dto.YearPlanForm;
 import com.example.galimbureproject.model.Batch;
+import com.example.galimbureproject.model.MonthPlan;
 import com.example.galimbureproject.model.RegisteredUser;
+import com.example.galimbureproject.model.StudentMonthPayment;
 import com.example.galimbureproject.model.StudentMark;
 import com.example.galimbureproject.model.UserRole;
 import com.example.galimbureproject.model.WeekPlan;
+import com.example.galimbureproject.model.YearPlan;
 import com.example.galimbureproject.repository.RegisteredUserRepository;
 import com.example.galimbureproject.service.BatchService;
+import com.example.galimbureproject.service.MonthPlanService;
+import com.example.galimbureproject.service.StudentMonthPaymentService;
 import com.example.galimbureproject.service.StudentMarkService;
 import com.example.galimbureproject.service.WeekPlanService;
+import com.example.galimbureproject.service.YearPlanService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Controller;
@@ -26,6 +34,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,18 +46,27 @@ public class AdminDashboardController {
 
     private final RegisteredUserRepository registeredUserRepository;
     private final BatchService batchService;
+    private final StudentMonthPaymentService studentMonthPaymentService;
     private final StudentMarkService studentMarkService;
+    private final YearPlanService yearPlanService;
+    private final MonthPlanService monthPlanService;
     private final WeekPlanService weekPlanService;
 
     public AdminDashboardController(
             RegisteredUserRepository registeredUserRepository,
             BatchService batchService,
+            StudentMonthPaymentService studentMonthPaymentService,
             StudentMarkService studentMarkService,
+            YearPlanService yearPlanService,
+            MonthPlanService monthPlanService,
             WeekPlanService weekPlanService
     ) {
         this.registeredUserRepository = registeredUserRepository;
         this.batchService = batchService;
+        this.studentMonthPaymentService = studentMonthPaymentService;
         this.studentMarkService = studentMarkService;
+        this.yearPlanService = yearPlanService;
+        this.monthPlanService = monthPlanService;
         this.weekPlanService = weekPlanService;
     }
 
@@ -61,11 +79,24 @@ public class AdminDashboardController {
     @GetMapping({"/admin-dashboard/marks", "/admin_dashboard/marks"})
     public String showMarksPage(
             @RequestParam(value = "batchId", required = false) Long batchId,
+            @RequestParam(value = "yearPlanId", required = false) Long yearPlanId,
+            @RequestParam(value = "monthPlanId", required = false) Long monthPlanId,
             @RequestParam(value = "weekPlanId", required = false) Long weekPlanId,
             Model model
     ) {
-        populateMarksModel(model, batchId, weekPlanId);
+        populateMarksModel(model, batchId, yearPlanId, monthPlanId, weekPlanId);
         return "marks";
+    }
+
+    @GetMapping({"/admin-dashboard/paid-status", "/admin_dashboard/paid_status"})
+    public String showPaidStatusPage(
+            @RequestParam(value = "batchId", required = false) Long batchId,
+            @RequestParam(value = "yearPlanId", required = false) Long yearPlanId,
+            @RequestParam(value = "monthPlanId", required = false) Long monthPlanId,
+            Model model
+    ) {
+        populatePaidStatusModel(model, batchId, yearPlanId, monthPlanId);
+        return "paid-Status";
     }
 
     @PostMapping({"/admin-dashboard/batches", "/admin_dashboard/batches"})
@@ -86,7 +117,7 @@ public class AdminDashboardController {
             Batch savedBatch = batchService.createBatch(batchForm);
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Batch " + savedBatch.getCompactLabel() + " was created."
+                    "Batch " + savedBatch.getCompactLabel() + " was created with two years."
             );
             return "redirect:/admin-dashboard";
         } catch (IllegalArgumentException exception) {
@@ -94,6 +125,87 @@ public class AdminDashboardController {
             populateAdminDashboardModel(model);
             model.addAttribute("batchForm", batchForm);
             return "admin-dashboard";
+        }
+    }
+
+    @PostMapping({"/admin-dashboard/years", "/admin_dashboard/years"})
+    public String createYear(
+            @Valid @ModelAttribute("yearPlanForm") YearPlanForm yearPlanForm,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("errorMessage", "Check the highlighted year fields and try again.");
+            populateAdminDashboardModel(model);
+            model.addAttribute("yearPlanForm", yearPlanForm);
+            return "admin-dashboard";
+        }
+
+        try {
+            YearPlan savedYear = yearPlanService.createYear(yearPlanForm);
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Year " + savedYear.getYearValue() + " was created for batch "
+                            + savedYear.getBatch().getCompactLabel() + "."
+            );
+            return "redirect:/admin-dashboard";
+        } catch (IllegalArgumentException exception) {
+            model.addAttribute("errorMessage", exception.getMessage());
+            populateAdminDashboardModel(model);
+            model.addAttribute("yearPlanForm", yearPlanForm);
+            return "admin-dashboard";
+        }
+    }
+
+    @PostMapping({"/admin-dashboard/paid-status", "/admin_dashboard/paid_status"})
+    public String saveMonthPayments(
+            @Valid @ModelAttribute("studentMonthPaymentBatchForm") StudentMonthPaymentBatchForm studentMonthPaymentBatchForm,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        Long selectedMonthPlanId = studentMonthPaymentBatchForm.getMonthPlanId();
+        MonthPlan selectedMonthPlan = selectedMonthPlanId == null
+                ? null
+                : monthPlanService.findById(selectedMonthPlanId).orElse(null);
+        Long selectedYearPlanId = selectedMonthPlan != null && selectedMonthPlan.getYearPlan() != null
+                ? selectedMonthPlan.getYearPlan().getId()
+                : null;
+        Long selectedBatchId = selectedMonthPlan != null && selectedMonthPlan.getBatch() != null
+                ? selectedMonthPlan.getBatch().getId()
+                : null;
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("errorMessage", "Select a month and try again.");
+            populatePaidStatusModel(model, selectedBatchId, selectedYearPlanId, selectedMonthPlanId);
+            model.addAttribute("studentMonthPaymentBatchForm", studentMonthPaymentBatchForm);
+            return "paid-Status";
+        }
+
+        try {
+            if (selectedMonthPlanId == null) {
+                throw new IllegalArgumentException("Select a month.");
+            }
+
+            selectedMonthPlan = monthPlanService.findById(selectedMonthPlanId)
+                    .orElseThrow(() -> new IllegalArgumentException("Selected month was not found."));
+            selectedYearPlanId = selectedMonthPlan.getYearPlan() != null ? selectedMonthPlan.getYearPlan().getId() : null;
+            selectedBatchId = selectedMonthPlan.getBatch() != null ? selectedMonthPlan.getBatch().getId() : null;
+            studentMonthPaymentService.saveMonthPayments(selectedMonthPlanId, studentMonthPaymentBatchForm.getEntries());
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    selectedMonthPlan.getDisplayLabel() + " payment statuses were saved."
+            );
+            return "redirect:/admin-dashboard/paid-status?batchId="
+                    + selectedBatchId
+                    + "&yearPlanId=" + selectedYearPlanId
+                    + "&monthPlanId=" + selectedMonthPlanId;
+        } catch (IllegalArgumentException exception) {
+            model.addAttribute("errorMessage", exception.getMessage());
+            populatePaidStatusModel(model, selectedBatchId, selectedYearPlanId, selectedMonthPlanId);
+            model.addAttribute("studentMonthPaymentBatchForm", studentMonthPaymentBatchForm);
+            return "paid-Status";
         }
     }
 
@@ -118,52 +230,6 @@ public class AdminDashboardController {
         return "redirect:/admin-dashboard";
     }
 
-    @PostMapping({"/admin-dashboard/week-plans", "/admin_dashboard/week_plans"})
-    public String createWeekPlan(
-            @Valid @ModelAttribute("weekPlanForm") WeekPlanForm weekPlanForm,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes
-    ) {
-        Long selectedBatchId = weekPlanForm.getBatchId();
-
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("errorMessage", "Check the highlighted week plan fields and try again.");
-            populateMarksModel(model, selectedBatchId, null);
-            model.addAttribute("weekPlanForm", weekPlanForm);
-            return "marks";
-        }
-
-        if (!weekPlanForm.isDateRangeValid()) {
-            bindingResult.rejectValue(
-                    "dateRangeValid",
-                    "weekPlan.dateRange",
-                    "Week end date must be on or after the week start date."
-            );
-            model.addAttribute("errorMessage", "Check the highlighted week plan fields and try again.");
-            populateMarksModel(model, selectedBatchId, null);
-            model.addAttribute("weekPlanForm", weekPlanForm);
-            return "marks";
-        }
-
-        try {
-            WeekPlan savedWeekPlan = weekPlanService.createWeekPlan(weekPlanForm);
-            redirectAttributes.addFlashAttribute(
-                    "successMessage",
-                    "Week " + savedWeekPlan.getWeekNumber() + " was created for batch "
-                            + savedWeekPlan.getBatch().getCompactLabel() + "."
-            );
-            return "redirect:/admin-dashboard/marks?batchId="
-                    + savedWeekPlan.getBatch().getId()
-                    + "&weekPlanId=" + savedWeekPlan.getId();
-        } catch (IllegalArgumentException exception) {
-            model.addAttribute("errorMessage", exception.getMessage());
-            populateMarksModel(model, selectedBatchId, null);
-            model.addAttribute("weekPlanForm", weekPlanForm);
-            return "marks";
-        }
-    }
-
     @PostMapping({"/admin-dashboard/marks", "/admin_dashboard/marks"})
     public String saveWeeklyMarks(
             @Valid @ModelAttribute("studentMarkBatchForm") StudentMarkBatchForm studentMarkBatchForm,
@@ -175,13 +241,19 @@ public class AdminDashboardController {
         WeekPlan selectedWeekPlan = selectedWeekPlanId == null
                 ? null
                 : weekPlanService.findById(selectedWeekPlanId).orElse(null);
+        Long selectedMonthPlanId = selectedWeekPlan != null && selectedWeekPlan.getMonthPlan() != null
+                ? selectedWeekPlan.getMonthPlan().getId()
+                : null;
+        Long selectedYearPlanId = selectedWeekPlan != null && selectedWeekPlan.getYearPlan() != null
+                ? selectedWeekPlan.getYearPlan().getId()
+                : null;
         Long selectedBatchId = selectedWeekPlan != null && selectedWeekPlan.getBatch() != null
                 ? selectedWeekPlan.getBatch().getId()
                 : null;
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("errorMessage", "Check the highlighted marks and try again.");
-            populateMarksModel(model, selectedBatchId, selectedWeekPlanId);
+            populateMarksModel(model, selectedBatchId, selectedYearPlanId, selectedMonthPlanId, selectedWeekPlanId);
             model.addAttribute("studentMarkBatchForm", studentMarkBatchForm);
             return "marks";
         }
@@ -193,19 +265,22 @@ public class AdminDashboardController {
 
             selectedWeekPlan = weekPlanService.findById(selectedWeekPlanId)
                     .orElseThrow(() -> new IllegalArgumentException("Selected week plan was not found."));
+            selectedMonthPlanId = selectedWeekPlan.getMonthPlan() != null ? selectedWeekPlan.getMonthPlan().getId() : null;
+            selectedYearPlanId = selectedWeekPlan.getYearPlan() != null ? selectedWeekPlan.getYearPlan().getId() : null;
             selectedBatchId = selectedWeekPlan.getBatch() != null ? selectedWeekPlan.getBatch().getId() : null;
             studentMarkService.saveWeekMarks(selectedWeekPlanId, studentMarkBatchForm.getEntries());
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Week " + selectedWeekPlan.getWeekNumber() + " marks saved for batch "
-                            + selectedWeekPlan.getBatch().getCompactLabel() + "."
+                    selectedWeekPlan.getDisplayLabel() + " marks were saved."
             );
             return "redirect:/admin-dashboard/marks?batchId="
                     + selectedBatchId
+                    + "&yearPlanId=" + selectedYearPlanId
+                    + "&monthPlanId=" + selectedMonthPlanId
                     + "&weekPlanId=" + selectedWeekPlanId;
         } catch (IllegalArgumentException exception) {
             model.addAttribute("errorMessage", exception.getMessage());
-            populateMarksModel(model, selectedBatchId, selectedWeekPlanId);
+            populateMarksModel(model, selectedBatchId, selectedYearPlanId, selectedMonthPlanId, selectedWeekPlanId);
             model.addAttribute("studentMarkBatchForm", studentMarkBatchForm);
             return "marks";
         }
@@ -214,10 +289,16 @@ public class AdminDashboardController {
     private void populateAdminDashboardModel(Model model) {
         List<RegisteredUser> users = registeredUserRepository.findAllByOrderByCreatedAtDesc();
         List<Batch> batches = batchService.getAllBatches();
+        long yearCount = yearPlanService.countAllYears();
+        long monthCount = monthPlanService.countAllMonthPlans();
+        long weekCount = weekPlanService.countAllWeekPlans();
 
         model.addAttribute("users", users);
         model.addAttribute("batches", batches);
         model.addAttribute("batchCount", batches.size());
+        model.addAttribute("yearCount", yearCount);
+        model.addAttribute("monthCount", monthCount);
+        model.addAttribute("weekCount", weekCount);
         model.addAttribute("totalUsers", users.size());
         model.addAttribute("adminUsers", users.stream().filter(this::isAdmin).count());
         model.addAttribute("studentUsers", users.stream().filter(user -> !isAdmin(user)).count());
@@ -225,14 +306,81 @@ public class AdminDashboardController {
         if (!model.containsAttribute("batchForm")) {
             model.addAttribute("batchForm", new BatchForm());
         }
+
+        if (!model.containsAttribute("yearPlanForm")) {
+            model.addAttribute("yearPlanForm", buildYearPlanForm(batches));
+        }
     }
 
-    private void populateMarksModel(Model model, Long requestedBatchId, Long requestedWeekPlanId) {
+    private void populatePaidStatusModel(
+            Model model,
+            Long requestedBatchId,
+            Long requestedYearPlanId,
+            Long requestedMonthPlanId
+    ) {
         List<Batch> batches = batchService.getAllBatches();
         Batch selectedBatch = resolveSelectedBatch(batches, requestedBatchId);
-        List<WeekPlan> weekPlans = selectedBatch == null
+        List<YearPlan> yearPlans = selectedBatch == null
                 ? List.of()
-                : weekPlanService.getWeekPlansForBatch(selectedBatch.getId());
+                : yearPlanService.getYearsForBatch(selectedBatch.getId());
+        YearPlan selectedYearPlan = resolveSelectedYearPlan(yearPlans, requestedYearPlanId);
+        List<MonthPlan> monthPlans = selectedYearPlan == null
+                ? List.of()
+                : monthPlanService.getMonthsForYear(selectedYearPlan.getId());
+        MonthPlan selectedMonthPlan = resolveSelectedMonthPlan(monthPlans, requestedMonthPlanId);
+        List<RegisteredUser> students = selectedBatch == null
+                ? List.of()
+                : registeredUserRepository.findAllByRoleAndBatch_IdOrderByFullNameAsc(UserRole.STUDENT, selectedBatch.getId());
+        List<StudentMonthPayment> monthPayments = selectedMonthPlan == null
+                ? List.of()
+                : studentMonthPaymentService.getPaymentsForMonth(selectedMonthPlan.getId());
+
+        model.addAttribute("batches", batches);
+        model.addAttribute("selectedBatch", selectedBatch);
+        model.addAttribute("selectedBatchId", selectedBatch != null ? selectedBatch.getId() : null);
+        model.addAttribute("yearPlans", yearPlans);
+        model.addAttribute("selectedYearPlan", selectedYearPlan);
+        model.addAttribute("selectedYearPlanId", selectedYearPlan != null ? selectedYearPlan.getId() : null);
+        model.addAttribute("monthPlans", monthPlans);
+        model.addAttribute("selectedMonthPlan", selectedMonthPlan);
+        model.addAttribute("selectedMonthPlanId", selectedMonthPlan != null ? selectedMonthPlan.getId() : null);
+        model.addAttribute("students", students);
+        model.addAttribute("monthPayments", monthPayments);
+        model.addAttribute("paidCount", monthPayments.stream().filter(StudentMonthPayment::isPaidStatus).count());
+        model.addAttribute("studentCount", students.size());
+        model.addAttribute("batchCount", batches.size());
+        model.addAttribute("yearCount", yearPlans.size());
+        model.addAttribute("monthCount", monthPlans.size());
+        model.addAttribute("totalRecords", monthPayments.size());
+
+        if (!model.containsAttribute("studentMonthPaymentBatchForm")) {
+            model.addAttribute(
+                    "studentMonthPaymentBatchForm",
+                    buildMonthPaymentBatchForm(students, selectedMonthPlan, monthPayments)
+            );
+        }
+    }
+
+    private void populateMarksModel(
+            Model model,
+            Long requestedBatchId,
+            Long requestedYearPlanId,
+            Long requestedMonthPlanId,
+            Long requestedWeekPlanId
+    ) {
+        List<Batch> batches = batchService.getAllBatches();
+        Batch selectedBatch = resolveSelectedBatch(batches, requestedBatchId);
+        List<YearPlan> yearPlans = selectedBatch == null
+                ? List.of()
+                : yearPlanService.getYearsForBatch(selectedBatch.getId());
+        YearPlan selectedYearPlan = resolveSelectedYearPlan(yearPlans, requestedYearPlanId);
+        List<MonthPlan> monthPlans = selectedYearPlan == null
+                ? List.of()
+                : monthPlanService.getMonthsForYear(selectedYearPlan.getId());
+        MonthPlan selectedMonthPlan = resolveSelectedMonthPlan(monthPlans, requestedMonthPlanId);
+        List<WeekPlan> weekPlans = selectedMonthPlan == null
+                ? List.of()
+                : weekPlanService.getWeekPlansForMonth(selectedMonthPlan.getId());
         WeekPlan selectedWeekPlan = resolveSelectedWeekPlan(weekPlans, requestedWeekPlanId);
         List<RegisteredUser> students = selectedBatch == null
                 ? List.of()
@@ -247,6 +395,12 @@ public class AdminDashboardController {
         model.addAttribute("batches", batches);
         model.addAttribute("selectedBatch", selectedBatch);
         model.addAttribute("selectedBatchId", selectedBatch != null ? selectedBatch.getId() : null);
+        model.addAttribute("yearPlans", yearPlans);
+        model.addAttribute("selectedYearPlan", selectedYearPlan);
+        model.addAttribute("selectedYearPlanId", selectedYearPlan != null ? selectedYearPlan.getId() : null);
+        model.addAttribute("monthPlans", monthPlans);
+        model.addAttribute("selectedMonthPlan", selectedMonthPlan);
+        model.addAttribute("selectedMonthPlanId", selectedMonthPlan != null ? selectedMonthPlan.getId() : null);
         model.addAttribute("weekPlans", weekPlans);
         model.addAttribute("selectedWeekPlan", selectedWeekPlan);
         model.addAttribute("selectedWeekPlanId", selectedWeekPlan != null ? selectedWeekPlan.getId() : null);
@@ -255,12 +409,10 @@ public class AdminDashboardController {
         model.addAttribute("assignedCount", weekMarks.size());
         model.addAttribute("studentCount", students.size());
         model.addAttribute("batchCount", batches.size());
-        model.addAttribute("weekPlanCount", weekPlans.size());
+        model.addAttribute("yearCount", yearPlans.size());
+        model.addAttribute("monthCount", monthPlans.size());
+        model.addAttribute("weekCount", weekPlans.size());
         model.addAttribute("totalMarks", weekMarks.size());
-
-        if (!model.containsAttribute("weekPlanForm")) {
-            model.addAttribute("weekPlanForm", buildWeekPlanForm(selectedBatch));
-        }
 
         if (!model.containsAttribute("studentMarkBatchForm")) {
             model.addAttribute("studentMarkBatchForm", buildBatchForm(students, selectedWeekPlan, weekMarks));
@@ -282,6 +434,36 @@ public class AdminDashboardController {
         return batches.get(0);
     }
 
+    private YearPlan resolveSelectedYearPlan(List<YearPlan> yearPlans, Long requestedYearPlanId) {
+        if (yearPlans.isEmpty()) {
+            return null;
+        }
+
+        if (requestedYearPlanId != null) {
+            return yearPlans.stream()
+                    .filter(yearPlan -> yearPlan.getId().equals(requestedYearPlanId))
+                    .findFirst()
+                    .orElse(yearPlans.get(0));
+        }
+
+        return yearPlans.get(0);
+    }
+
+    private MonthPlan resolveSelectedMonthPlan(List<MonthPlan> monthPlans, Long requestedMonthPlanId) {
+        if (monthPlans.isEmpty()) {
+            return null;
+        }
+
+        if (requestedMonthPlanId != null) {
+            return monthPlans.stream()
+                    .filter(monthPlan -> monthPlan.getId().equals(requestedMonthPlanId))
+                    .findFirst()
+                    .orElse(monthPlans.get(0));
+        }
+
+        return monthPlans.get(0);
+    }
+
     private WeekPlan resolveSelectedWeekPlan(List<WeekPlan> weekPlans, Long requestedWeekPlanId) {
         if (weekPlans.isEmpty()) {
             return null;
@@ -297,9 +479,45 @@ public class AdminDashboardController {
         return weekPlans.get(0);
     }
 
-    private WeekPlanForm buildWeekPlanForm(Batch selectedBatch) {
-        WeekPlanForm form = new WeekPlanForm();
-        form.setBatchId(selectedBatch != null ? selectedBatch.getId() : null);
+    private YearPlanForm buildYearPlanForm(List<Batch> batches) {
+        YearPlanForm form = new YearPlanForm();
+        if (!batches.isEmpty()) {
+            Batch firstBatch = batches.get(0);
+            form.setBatchId(firstBatch.getId());
+            Integer baseYear = firstBatch.getBatchYear();
+            form.setYearValue(baseYear == null ? LocalDate.now().getYear() : baseYear + 2);
+        } else {
+            form.setYearValue(LocalDate.now().getYear());
+        }
+        return form;
+    }
+
+    private StudentMonthPaymentBatchForm buildMonthPaymentBatchForm(
+            List<RegisteredUser> students,
+            MonthPlan selectedMonthPlan,
+            List<StudentMonthPayment> monthPayments
+    ) {
+        Map<Long, Boolean> paidStatusByStudentId = monthPayments.stream()
+                .collect(Collectors.toMap(
+                        payment -> payment.getStudent().getId(),
+                        StudentMonthPayment::isPaidStatus,
+                        (existing, replacement) -> replacement,
+                        LinkedHashMap::new
+                ));
+
+        StudentMonthPaymentBatchForm form = new StudentMonthPaymentBatchForm();
+        form.setMonthPlanId(selectedMonthPlan != null ? selectedMonthPlan.getId() : null);
+
+        List<StudentMonthPaymentEntryForm> entries = students.stream()
+                .map(student -> {
+                    StudentMonthPaymentEntryForm entry = new StudentMonthPaymentEntryForm();
+                    entry.setStudentId(student.getId());
+                    entry.setPaidStatus(Boolean.TRUE.equals(paidStatusByStudentId.get(student.getId())));
+                    return entry;
+                })
+                .toList();
+
+        form.setEntries(entries);
         return form;
     }
 

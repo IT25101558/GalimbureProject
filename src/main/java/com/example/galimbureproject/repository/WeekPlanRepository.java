@@ -13,27 +13,33 @@ public interface WeekPlanRepository extends JpaRepository<WeekPlan, Long> {
     @Query("""
             select weekPlan
             from WeekPlan weekPlan
-            join fetch weekPlan.batch
-            order by weekPlan.batch.batchYear asc, weekPlan.batch.place asc, weekPlan.weekNumber asc
+            join fetch weekPlan.monthPlan monthPlan
+            join fetch monthPlan.yearPlan yearPlan
+            join fetch yearPlan.batch
+            order by yearPlan.batch.batchYear asc, yearPlan.yearValue asc, monthPlan.monthNumber asc, weekPlan.weekNumber asc
             """)
-    List<WeekPlan> findAllOrderedWithBatch();
+    List<WeekPlan> findAllOrderedWithHierarchy();
 
     @Query("""
             select weekPlan
             from WeekPlan weekPlan
-            join fetch weekPlan.batch
-            where weekPlan.batch.id = :batchId
+            join fetch weekPlan.monthPlan monthPlan
+            join fetch monthPlan.yearPlan yearPlan
+            join fetch yearPlan.batch
+            where monthPlan.id = :monthPlanId
             order by weekPlan.weekNumber asc
             """)
-    List<WeekPlan> findAllByBatch_IdOrderByWeekNumberAsc(@Param("batchId") Long batchId);
+    List<WeekPlan> findAllByMonthPlan_IdOrderByWeekNumberAsc(@Param("monthPlanId") Long monthPlanId);
 
     @Query("""
             select weekPlan
             from WeekPlan weekPlan
-            join fetch weekPlan.batch
+            join fetch weekPlan.monthPlan monthPlan
+            join fetch monthPlan.yearPlan yearPlan
+            join fetch yearPlan.batch
             where weekPlan.id = :id
             """)
-    Optional<WeekPlan> findByIdWithBatch(@Param("id") Long id);
+    Optional<WeekPlan> findByIdWithHierarchy(@Param("id") Long id);
 
-    boolean existsByBatch_IdAndWeekNumber(Long batchId, Integer weekNumber);
+    boolean existsByMonthPlan_IdAndWeekNumber(Long monthPlanId, Integer weekNumber);
 }

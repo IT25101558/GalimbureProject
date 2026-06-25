@@ -2,19 +2,18 @@ package com.example.galimbureproject.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.Month;
 import java.time.format.TextStyle;
@@ -22,33 +21,28 @@ import java.util.Locale;
 
 @Entity
 @Table(
-        name = "weekplan_table",
+        name = "student_month_payments",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_weekplan_table_month_week_number",
-                columnNames = {"month_plan_id", "week_number"}
+                name = "uk_student_month_payments_student_month",
+                columnNames = {"student_id", "month_plan_id"}
         )
 )
-public class WeekPlan {
+public class StudentMonthPayment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "week_number", nullable = false)
-    private Integer weekNumber;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "student_id", nullable = false)
+    private RegisteredUser student;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "month_plan_id", nullable = false)
     private MonthPlan monthPlan;
 
-    @Column(nullable = false, length = 250)
-    private String task;
-
-    @Column(name = "week_start_date", nullable = false)
-    private LocalDate weekStartDate;
-
-    @Column(name = "week_end_date", nullable = false)
-    private LocalDate weekEndDate;
+    @Column(name = "paid_status", nullable = false)
+    private boolean paidStatus;
 
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -74,12 +68,12 @@ public class WeekPlan {
         return id;
     }
 
-    public Integer getWeekNumber() {
-        return weekNumber;
+    public RegisteredUser getStudent() {
+        return student;
     }
 
-    public void setWeekNumber(Integer weekNumber) {
-        this.weekNumber = weekNumber;
+    public void setStudent(RegisteredUser student) {
+        this.student = student;
     }
 
     public MonthPlan getMonthPlan() {
@@ -90,28 +84,12 @@ public class WeekPlan {
         this.monthPlan = monthPlan;
     }
 
-    public String getTask() {
-        return task;
+    public boolean isPaidStatus() {
+        return paidStatus;
     }
 
-    public void setTask(String task) {
-        this.task = task;
-    }
-
-    public LocalDate getWeekStartDate() {
-        return weekStartDate;
-    }
-
-    public void setWeekStartDate(LocalDate weekStartDate) {
-        this.weekStartDate = weekStartDate;
-    }
-
-    public LocalDate getWeekEndDate() {
-        return weekEndDate;
-    }
-
-    public void setWeekEndDate(LocalDate weekEndDate) {
-        this.weekEndDate = weekEndDate;
+    public void setPaidStatus(boolean paidStatus) {
+        this.paidStatus = paidStatus;
     }
 
     public OffsetDateTime getCreatedAt() {
@@ -123,13 +101,13 @@ public class WeekPlan {
     }
 
     @Transient
-    public YearPlan getYearPlan() {
-        return monthPlan != null ? monthPlan.getYearPlan() : null;
+    public Batch getBatch() {
+        return monthPlan != null ? monthPlan.getBatch() : null;
     }
 
     @Transient
-    public Batch getBatch() {
-        return monthPlan != null ? monthPlan.getBatch() : null;
+    public YearPlan getYearPlan() {
+        return monthPlan != null ? monthPlan.getYearPlan() : null;
     }
 
     @Transient
@@ -144,25 +122,29 @@ public class WeekPlan {
 
     @Transient
     public String getMonthLabel() {
-        if (monthPlan == null) {
+        Integer monthNumber = getMonthNumber();
+        if (monthNumber == null) {
             return "-";
         }
 
-        Integer monthValue = monthPlan.getMonthNumber();
-        if (monthValue == null) {
-            return "-";
-        }
-
-        return Month.of(monthValue).getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+        return Month.of(monthNumber).getDisplayName(TextStyle.FULL, Locale.ENGLISH);
     }
 
     @Transient
     public String getDisplayLabel() {
+        Batch batch = getBatch();
         Integer yearValue = getYearValue();
-        if (yearValue == null) {
-            return "Week " + (weekNumber == null ? "-" : weekNumber);
+        StringBuilder label = new StringBuilder();
+
+        if (batch != null) {
+            label.append(batch.getCompactLabel()).append(" / ");
         }
 
-        return "Year " + yearValue + " / " + getMonthLabel() + " / Week " + weekNumber;
+        if (yearValue != null) {
+            label.append(yearValue).append(" / ");
+        }
+
+        label.append(getMonthLabel());
+        return label.toString();
     }
 }

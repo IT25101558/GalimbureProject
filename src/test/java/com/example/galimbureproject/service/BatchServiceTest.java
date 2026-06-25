@@ -9,8 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,6 +22,9 @@ class BatchServiceTest {
     @Mock
     private BatchRepository batchRepository;
 
+    @Mock
+    private YearPlanService yearPlanService;
+
     @InjectMocks
     private BatchService batchService;
 
@@ -32,7 +33,7 @@ class BatchServiceTest {
         BatchForm form = new BatchForm();
         form.setBatchYear(2026);
         form.setPlace("Gampaha");
-        form.setBatchDate("2026-06-23");
+        form.setBatchDate("Saturday, Sunday");
 
         when(batchRepository.existsByBatchYearAndPlaceIgnoreCase(2026, "Gampaha")).thenReturn(false);
         when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -41,9 +42,10 @@ class BatchServiceTest {
 
         assertEquals(2026, saved.getBatchYear());
         assertEquals("Gampaha", saved.getPlace());
-        assertEquals(LocalDate.parse("2026-06-23"), saved.getBatchDate());
+        assertEquals("Saturday, Sunday", saved.getBatchDate());
         verify(batchRepository).existsByBatchYearAndPlaceIgnoreCase(2026, "Gampaha");
         verify(batchRepository).save(any(Batch.class));
+        verify(yearPlanService).createDefaultYearsForBatch(saved);
     }
 
     @Test
@@ -51,7 +53,7 @@ class BatchServiceTest {
         BatchForm form = new BatchForm();
         form.setBatchYear(2026);
         form.setPlace("Gampaha");
-        form.setBatchDate("2026-06-23");
+        form.setBatchDate("Saturday, Sunday");
 
         when(batchRepository.existsByBatchYearAndPlaceIgnoreCase(2026, "Gampaha")).thenReturn(true);
 
@@ -63,5 +65,6 @@ class BatchServiceTest {
         assertEquals("Batch 2026 - Gampaha already exists.", exception.getMessage());
         verify(batchRepository).existsByBatchYearAndPlaceIgnoreCase(2026, "Gampaha");
         verify(batchRepository, never()).save(any(Batch.class));
+        verify(yearPlanService, never()).createDefaultYearsForBatch(any(Batch.class));
     }
 }

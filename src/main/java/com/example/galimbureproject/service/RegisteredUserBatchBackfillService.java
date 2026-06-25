@@ -89,7 +89,7 @@ public class RegisteredUserBatchBackfillService {
         Batch batch = new Batch();
         batch.setBatchYear(batchYear);
         batch.setPlace(LEGACY_BATCH_PLACE);
-        batch.setBatchDate(LocalDate.of(batchYear, 1, 1));
+        batch.setBatchDate(LocalDate.of(batchYear, 1, 1).toString());
         return batchRepository.save(batch);
     }
 }

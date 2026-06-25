@@ -10,13 +10,17 @@ Spring Boot authentication app with registration, login, and a protected dashboa
 - `POST /register` validates the selected batch, saves the account, and signs them in automatically.
 - `GET /dashboard` shows the protected dashboard after login or registration.
 - `GET /admin-dashboard` shows the admin dashboard for users with `ADMIN` role.
-- `POST /admin-dashboard/batches` creates a batch row from the admin dashboard.
-- `GET /admin-dashboard/marks` shows the week-plan and marks page.
-- `POST /admin-dashboard/week-plans` creates a week plan row for a selected batch.
+- `POST /admin-dashboard/batches` creates a batch row and auto-creates two years under it.
+- `POST /admin-dashboard/years` creates a year row and auto-creates 12 months with five weeks each.
+- `GET /admin-dashboard/paid-status` opens the student payment status page for a selected batch, year, and month.
+- `POST /admin-dashboard/paid-status` saves payment status changes for the selected month.
+- `GET /admin-dashboard/marks` shows the batch, year, month, and week marks page.
 - `POST /admin-dashboard/users/{id}/role` updates a user's role from the admin dashboard.
-- `POST /admin-dashboard/marks` stores or updates weekly marks for the selected week plan.
+- `POST /admin-dashboard/marks` stores or updates weekly marks for the selected week.
 - Data is saved into the `registered_users` PostgreSQL table.
 - Batches are saved into the `batch_table` PostgreSQL table.
+- Years are saved into the `yearplan_table` PostgreSQL table.
+- Months are saved into the `monthplan_table` PostgreSQL table.
 - Week plans are saved into the `weekplan_table` PostgreSQL table.
 - Weekly marks are saved into the `student_marks` PostgreSQL table.
 - Passwords are stored as BCrypt hashes.
@@ -141,7 +145,59 @@ batch_date
 Rules:
 
 - Batch year and place together are unique.
-- The admin creates batches from the admin dashboard before creating week plans.
+- The admin creates batches from the admin dashboard before the year, month, and week rows are generated.
+
+## Year Plan Table
+
+The year plan table is created automatically by Hibernate.
+
+Table name:
+
+```text
+yearplan_table
+```
+
+Columns:
+
+```text
+id
+batch_id
+year_value
+created_at
+updated_at
+```
+
+Rules:
+
+- Each batch gets two years by default when it is created.
+- Year values are unique within the same batch.
+
+## Month Plan Table
+
+The month plan table is created automatically by Hibernate.
+
+Table name:
+
+```text
+monthplan_table
+```
+
+Columns:
+
+```text
+id
+year_plan_id
+month_number
+paid_status
+created_at
+updated_at
+```
+
+Rules:
+
+- Each year gets 12 months automatically.
+- `paid_status` is stored on the month row.
+- Month numbers are unique within the same year.
 
 ## Student Marks Table
 
@@ -167,7 +223,7 @@ updated_at
 Rules:
 
 - One student can have only one mark per week plan.
-- Admins select a batch and week plan, then create or update only the students assigned to that batch from `marks.html`.
+- Admins select a batch, year, month, and week, then create or update only the students assigned to that batch from `marks.html`.
 - The student dashboard still shows weekly marks as a line chart.
 
 ## Week Plan Table
@@ -184,7 +240,7 @@ Columns:
 
 ```text
 id
-batch_id
+month_plan_id
 week_number
 task
 week_start_date
@@ -195,6 +251,6 @@ updated_at
 
 Rules:
 
-- Week numbers are unique per batch, not globally.
-- The admin creates the week plan on `marks.html` after selecting a batch.
-- The marks editor only shows the week plans created for the selected batch.
+- Week numbers are unique per month, not globally.
+- Each month gets 5 weeks automatically.
+- The marks editor only shows the week plans created for the selected month.

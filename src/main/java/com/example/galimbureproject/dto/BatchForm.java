@@ -4,7 +4,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class BatchForm {
@@ -18,8 +17,8 @@ public class BatchForm {
     @Size(max = 150, message = "Place must be 150 characters or fewer.")
     private String place;
 
-    @NotBlank(message = "Date is required.")
-    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date must be in yyyy-MM-dd format.")
+    @NotBlank(message = "Batch date is required.")
+    @Size(max = 255, message = "Batch date must be 255 characters or fewer.")
     private String batchDate;
 
     public Integer getBatchYear() {

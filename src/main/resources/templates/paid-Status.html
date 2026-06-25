@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Marks</title>
+    <title>Paid Status</title>
     <style>
         :root {
             --ink: #132126;
@@ -13,7 +13,6 @@
             --line: #d0dcde;
             --accent: #0d6b63;
             --accent-strong: #084d48;
-            --gold: #f2c45d;
             --soft: #f7fafb;
             --success: #146c43;
             --danger: #b42318;
@@ -60,6 +59,7 @@
             justify-content: space-between;
             gap: 18px;
             padding: 22px 24px;
+            flex-wrap: wrap;
         }
 
         .brand {
@@ -95,18 +95,6 @@
             flex-wrap: wrap;
         }
 
-        .pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid rgba(19, 33, 38, 0.12);
-            border-radius: 999px;
-            padding: 10px 14px;
-            background: var(--soft);
-            font-family: "Segoe UI", Verdana, sans-serif;
-            font-weight: 700;
-        }
-
         .nav-link,
         .logout-form button,
         .save-button {
@@ -134,8 +122,7 @@
         }
 
         .save-button:disabled,
-        select:disabled,
-        input[type="number"]:disabled {
+        select:disabled {
             cursor: not-allowed;
             opacity: 0.65;
             transform: none;
@@ -213,7 +200,7 @@
             width: 100%;
             border-collapse: collapse;
             font-family: "Segoe UI", Verdana, sans-serif;
-            min-width: 1040px;
+            min-width: 980px;
         }
 
         thead th {
@@ -252,59 +239,15 @@
             box-shadow: 0 0 0 4px rgba(13, 107, 99, 0.14);
         }
 
-        input[type="number"],
-        input[type="text"],
-        input[type="date"] {
-            width: 100%;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: #fff;
-            color: var(--ink);
-            font: 0.95rem "Segoe UI", Verdana, sans-serif;
-            padding: 10px 12px;
-        }
-
-        input[type="number"]:focus,
-        input[type="text"]:focus,
-        input[type="date"]:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(13, 107, 99, 0.14);
-        }
-
         .muted {
             color: var(--muted);
         }
 
-        .plan-panel,
-        .marks-panel {
-            display: grid;
-            gap: 18px;
-        }
-
-        .plan-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
-            gap: 18px;
-            align-items: start;
-        }
-
-        .plan-form {
-            display: grid;
-            gap: 14px;
-        }
-
         .filter-form {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
             align-items: end;
-        }
-
-        .field-row {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
         }
 
         .field {
@@ -338,7 +281,7 @@
             line-height: 1.6;
         }
 
-        .batch-pill {
+        .selection-pill {
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -350,11 +293,7 @@
             font-weight: 700;
         }
 
-        .mark-input {
-            width: 120px;
-        }
-
-        .mark-status {
+        .payment-status {
             display: inline-flex;
             align-items: center;
             border-radius: 999px;
@@ -366,31 +305,33 @@
             letter-spacing: 0.04em;
         }
 
-        .mark-actions {
+        .payment-status.paid {
+            background: rgba(20, 108, 67, 0.12);
+            border-color: rgba(20, 108, 67, 0.22);
+            color: var(--success);
+        }
+
+        .payment-status.unpaid {
+            background: rgba(180, 35, 24, 0.08);
+            border-color: rgba(180, 35, 24, 0.16);
+            color: var(--danger);
+        }
+
+        .payment-actions {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
             flex-wrap: wrap;
+            margin-top: 16px;
         }
 
-        .mark-actions .section-copy {
+        .payment-actions .section-copy {
             margin: 0;
         }
 
-        .plan-table,
-        .marks-edit-table {
-            min-width: 1040px;
-        }
-
-        .plan-link {
-            color: var(--accent);
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .plan-link:hover {
-            text-decoration: underline;
+        .payment-table {
+            min-width: 980px;
         }
 
         @media (max-width: 840px) {
@@ -400,18 +341,14 @@
             }
 
             .summary {
-                grid-template-columns: 1fr;
-            }
-
-            .plan-layout {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
             }
 
             .filter-form {
                 grid-template-columns: 1fr;
             }
 
-            .mark-actions {
+            .payment-actions {
                 align-items: flex-start;
             }
         }
@@ -433,16 +370,16 @@
     <section class="shell">
         <header class="topbar">
             <div class="brand">
-                <span>Admin Marks</span>
-                <h1>Weekly marks</h1>
+                <span>Admin Payments</span>
+                <h1>Paid status</h1>
                 <p th:if="${selectedBatch != null}"
                    th:text="${'Batch ' + selectedBatch.batchYear + ' is selected.'}">Batch 2026 is selected.</p>
-                <p th:if="${selectedBatch == null}">Select a batch, year, month, and week to manage marks.</p>
+                <p th:if="${selectedBatch == null}">Select a batch, year, and month to update student payment status.</p>
             </div>
 
             <div class="top-actions">
-                <a class="nav-link" th:href="@{/admin-dashboard}">Batches</a>
-                <a class="nav-link" th:href="@{/admin-dashboard/paid-status}">Paid status</a>
+                <a class="nav-link" th:href="@{/admin-dashboard}">Admin dashboard</a>
+                <a class="nav-link" th:href="@{/admin-dashboard/marks}">Weekly marks</a>
                 <form class="logout-form" th:action="@{/logout}" method="post">
                     <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <button type="submit">Log out</button>
@@ -467,67 +404,26 @@
                 <strong th:text="${monthCount}">0</strong>
             </div>
             <div class="metric">
-                <span>Weeks</span>
-                <strong th:text="${weekCount}">0</strong>
-            </div>
-            <div class="metric">
                 <span>Students</span>
                 <strong th:text="${studentCount}">0</strong>
             </div>
             <div class="metric">
-                <span>Assigned</span>
-                <strong th:text="${assignedCount}">0</strong>
+                <span>Paid records</span>
+                <strong th:text="${paidCount}">0</strong>
+            </div>
+            <div class="metric">
+                <span>Saved rows</span>
+                <strong th:text="${totalRecords}">0</strong>
             </div>
         </section>
 
-        <section class="panel plan-panel">
+        <section class="panel">
             <div>
-                <h2 class="section-title">Selected weeks</h2>
-                <p class="section-copy">Weeks are created automatically under each month. Use the filters below to move through the hierarchy.</p>
+                <h2 class="section-title">Update payment status</h2>
+                <p class="section-copy">Pick the batch hierarchy first. The table below loads the registered students for that batch and month.</p>
             </div>
 
-            <div class="table-wrap">
-                <table class="plan-table">
-                    <thead>
-                    <tr>
-                        <th>Batch</th>
-                        <th>Year</th>
-                        <th>Month</th>
-                        <th>Week</th>
-                        <th>Task</th>
-                        <th>Start</th>
-                        <th>End</th>
-                        <th>Open</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="plan : ${weekPlans}">
-                        <td th:text="${plan.batch != null ? plan.batch.compactLabel : '-'}">Batch 2026</td>
-                        <td th:text="${plan.yearValue != null ? plan.yearValue : '-'}">2026</td>
-                        <td th:text="${plan.monthLabel}">January</td>
-                        <td th:text="${plan.weekNumber}">1</td>
-                        <td th:text="${plan.task}">Task</td>
-                        <td th:text="${#temporals.format(plan.weekStartDate, 'dd MMM yyyy')}">01 Jan 2026</td>
-                        <td th:text="${#temporals.format(plan.weekEndDate, 'dd MMM yyyy')}">07 Jan 2026</td>
-                        <td>
-                            <a class="plan-link" th:href="@{/admin-dashboard/marks(batchId=${plan.batch.id}, yearPlanId=${plan.yearPlan.id}, monthPlanId=${plan.monthPlan.id}, weekPlanId=${plan.id})}">Load marks</a>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(weekPlans)}">
-                        <td colspan="8" class="muted">No week plans found for the selected month.</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="panel marks-panel">
-            <div>
-                <h2 class="section-title">Update marks</h2>
-                <p class="section-copy">Pick a batch, then year, month, and week. The table then loads only the students assigned to that batch.</p>
-            </div>
-
-            <form class="filter-form" th:action="@{/admin-dashboard/marks}" method="get">
+            <form class="filter-form" th:action="@{/admin-dashboard/paid-status}" method="get">
                 <div class="field">
                     <label for="batchFilter">Batch</label>
                     <select id="batchFilter" name="batchId" onchange="this.form.submit()" th:disabled="${#lists.isEmpty(batches)}">
@@ -560,66 +456,59 @@
                                 th:text="${month.monthLabel}">January</option>
                     </select>
                 </div>
-
-                <div class="field">
-                    <label for="weekPlanFilter">Week</label>
-                    <select id="weekPlanFilter" name="weekPlanId" onchange="this.form.submit()" th:disabled="${#lists.isEmpty(weekPlans)}">
-                        <option value="" th:if="${#lists.isEmpty(weekPlans)}">No weeks</option>
-                        <option th:each="plan : ${weekPlans}"
-                                th:value="${plan.id}"
-                                th:selected="${selectedWeekPlanId != null and plan.id.equals(selectedWeekPlanId)}"
-                                th:text="${'Week ' + plan.weekNumber}">Week 1</option>
-                    </select>
-                </div>
             </form>
 
-            <div class="batch-pill" th:if="${selectedWeekPlan != null}">
+            <div class="selection-pill" th:if="${selectedMonthPlan != null}">
                 <span>Selected</span>
-                <strong th:text="${'Batch ' + selectedBatch.batchYear + ' / Year ' + selectedYearPlan.yearValue + ' / ' + selectedMonthPlan.monthLabel + ' / Week ' + selectedWeekPlan.weekNumber}">Batch 2026 / Year 2026 / January / Week 1</strong>
+                <strong th:text="${selectedMonthPlan.displayLabel}">Batch 2026 / 2026 / January</strong>
             </div>
 
-            <div class="table-wrap" th:if="${selectedWeekPlan != null}">
-                <form class="week-mark-form" th:action="@{/admin-dashboard/marks}" th:object="${studentMarkBatchForm}" method="post">
+            <div class="table-wrap" th:if="${selectedMonthPlan != null}">
+                <form th:action="@{/admin-dashboard/paid-status}" th:object="${studentMonthPaymentBatchForm}" method="post">
                     <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <input type="hidden" th:field="*{weekPlanId}">
+                    <input type="hidden" th:field="*{monthPlanId}">
 
-                    <table class="marks-edit-table">
+                    <table class="payment-table">
                         <thead>
                         <tr>
                             <th>Student</th>
                             <th>Email</th>
-                            <th>Mark</th>
+                            <th>Paid status</th>
                             <th>State</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="student, stat : ${students}" th:with="entry=${studentMarkBatchForm.entries[stat.index]}">
+                        <tr th:each="student, stat : ${students}" th:with="entry=${studentMonthPaymentBatchForm.entries[stat.index]}">
                             <td th:text="${student.fullName}">Student Name</td>
                             <td th:text="${student.email}">student@example.com</td>
                             <td>
                                 <input type="hidden" th:field="*{entries[__${stat.index}__].studentId}">
-                                <input class="mark-input" type="number" min="0" max="100" step="1" th:field="*{entries[__${stat.index}__].mark}">
-                                <p class="field-error" th:if="${#fields.hasErrors('entries[' + stat.index + '].mark')}" th:errors="*{entries[__${stat.index}__].mark}"></p>
+                                <select th:field="*{entries[__${stat.index}__].paidStatus}">
+                                    <option value="false">Unpaid</option>
+                                    <option value="true">Paid</option>
+                                </select>
                             </td>
                             <td>
-                                <span class="mark-status" th:text="${entry.mark != null ? 'Assigned' : 'Not assigned'}">Not assigned</span>
+                                <span class="payment-status"
+                                      th:classappend="${entry.paidStatus} ? ' paid' : ' unpaid'"
+                                      th:text="${entry.paidStatus ? 'Paid' : 'Unpaid'}">Unpaid</span>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(students)}">
-                            <td colspan="4" class="muted">No student accounts are available yet.</td>
+                            <td colspan="4" class="muted">No student accounts are available for the selected batch.</td>
                         </tr>
                         </tbody>
                     </table>
 
-                    <div class="mark-actions">
-                        <p class="section-copy">Blank marks are skipped. Existing marks for the selected batch, year, month, and week load automatically.</p>
-                        <button class="save-button" type="submit" th:disabled="${#lists.isEmpty(students)}">Save week marks</button>
+                    <div class="payment-actions">
+                        <p class="section-copy">Changes are saved per student for the selected month.</p>
+                        <button class="save-button" type="submit" th:disabled="${#lists.isEmpty(students) or selectedMonthPlan == null}">Save payment statuses</button>
                     </div>
                 </form>
             </div>
 
-            <div class="note" th:if="${selectedWeekPlan == null}">
-                No week plan is selected yet. Choose a batch, year, month, and week above.
+            <div class="note" th:if="${selectedMonthPlan == null}">
+                No month is selected yet. Choose a batch, year, and month above.
             </div>
         </section>
     </section>

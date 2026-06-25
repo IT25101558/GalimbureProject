@@ -58,7 +58,7 @@ public class StudentMarkService {
             throw new IllegalArgumentException("Select a week plan.");
         }
 
-        WeekPlan weekPlan = weekPlanRepository.findByIdWithBatch(weekPlanId)
+        WeekPlan weekPlan = weekPlanRepository.findByIdWithHierarchy(weekPlanId)
                 .orElseThrow(() -> new IllegalArgumentException("Selected week plan was not found."));
 
         if (entries == null) {
@@ -79,7 +79,7 @@ public class StudentMarkService {
             throw new IllegalArgumentException("Select a week plan.");
         }
 
-        WeekPlan weekPlan = weekPlanRepository.findByIdWithBatch(weekPlanId)
+        WeekPlan weekPlan = weekPlanRepository.findByIdWithHierarchy(weekPlanId)
                 .orElseThrow(() -> new IllegalArgumentException("Selected week plan was not found."));
         return saveOrUpdate(studentId, weekPlan, markValue);
     }

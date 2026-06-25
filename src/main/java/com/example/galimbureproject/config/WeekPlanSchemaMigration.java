@@ -20,6 +20,7 @@ public class WeekPlanSchemaMigration implements ApplicationRunner {
 
     private static final String WEEK_PLAN_TABLE = "weekplan_table";
     private static final String LEGACY_WEEK_CONSTRAINT = "uk_weekplan_table_week_number";
+    private static final String LEGACY_BATCH_WEEK_CONSTRAINT = "uk_weekplan_table_batch_week_number";
     private static final String LEGACY_STUDENT_MARK_CONSTRAINT = "uk_student_marks_student_week";
     private static final String MONTH_PLAN_COLUMN = "month_plan_id";
     private static final String LEGACY_BATCH_COLUMN = "batch_id";
@@ -41,6 +42,7 @@ public class WeekPlanSchemaMigration implements ApplicationRunner {
         }
 
         jdbcTemplate.execute("ALTER TABLE weekplan_table DROP CONSTRAINT IF EXISTS " + LEGACY_WEEK_CONSTRAINT);
+        jdbcTemplate.execute("ALTER TABLE weekplan_table DROP CONSTRAINT IF EXISTS " + LEGACY_BATCH_WEEK_CONSTRAINT);
         jdbcTemplate.execute("ALTER TABLE student_marks DROP CONSTRAINT IF EXISTS " + LEGACY_STUDENT_MARK_CONSTRAINT);
 
         if (columnExists(WEEK_PLAN_TABLE, LEGACY_BATCH_COLUMN)) {

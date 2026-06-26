@@ -17,6 +17,7 @@ Spring Boot authentication app with registration, login, and a protected dashboa
 - `GET /admin-dashboard/marks` shows the batch, year, month, and week marks page.
 - `POST /admin-dashboard/users/{id}/role` updates a user's role from the admin dashboard.
 - `POST /admin-dashboard/marks` stores or updates weekly marks for the selected week.
+- The admin dashboard can filter the year history by batch.
 - Data is saved into the `registered_users` PostgreSQL table.
 - Batches are saved into the `batch_table` PostgreSQL table.
 - Years are saved into the `yearplan_table` PostgreSQL table.
@@ -224,7 +225,7 @@ Rules:
 
 - One student can have only one mark per week plan.
 - Admins select a batch, year, month, and week, then create or update only the students assigned to that batch from `marks.html`.
-- The student dashboard still shows weekly marks as a line chart.
+- The student dashboard shows weekly marks as a line chart only after the latest month payment is marked paid. Otherwise it shows a waiting message and hides the marks.
 
 ## Week Plan Table
 

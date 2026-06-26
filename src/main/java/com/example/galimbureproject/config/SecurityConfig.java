@@ -32,12 +32,18 @@ public class SecurityConfig {
                                 "/",
                                 "/login",
                                 "/register",
-                                "/about-us",
-                                "/about_us",
-                                "/contact-us",
-                                "/contact_us",
-                                "/error"
-                        ).permitAll()
+                        "/about-us",
+                        "/about_us",
+                        "/contact-us",
+                        "/contact_us",
+                        "/error"
+                ).permitAll()
+                        .requestMatchers(
+                                "/change-profile-info",
+                                "/change-profile-info/**",
+                                "/change-password",
+                                "/change-password/**"
+                        ).hasRole("STUDENT")
                         .requestMatchers("/admin-dashboard", "/admin-dashboard/**", "/admin_dashboard", "/admin_dashboard/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

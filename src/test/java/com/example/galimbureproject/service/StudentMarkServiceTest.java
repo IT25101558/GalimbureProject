@@ -85,4 +85,12 @@ class StudentMarkServiceTest {
         assertEquals("Selected student does not belong to the selected batch.", exception.getMessage());
         verify(studentMarkRepository, never()).save(any());
     }
+
+    @Test
+    void getMarksForStudentAndMonthDelegatesToRepository() {
+        when(studentMarkRepository.findForStudentAndMonthOrdered(7L, 31L)).thenReturn(List.of());
+
+        assertEquals(List.of(), studentMarkService.getMarksForStudentAndMonth(7L, 31L));
+        verify(studentMarkRepository).findForStudentAndMonthOrdered(7L, 31L);
+    }
 }

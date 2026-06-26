@@ -52,6 +52,7 @@ public class WeekPlanSchemaMigration implements ApplicationRunner {
         ensureMonthPlanColumnExists();
         ensureExistingBatchesHaveYearsAndMonths();
         backfillWeekPlansToMonths();
+        dropLegacyStudentMarkWeekNumberColumn();
     }
 
     private void backfillLegacyBatchAssignmentsIfNeeded() {
@@ -246,6 +247,14 @@ public class WeekPlanSchemaMigration implements ApplicationRunner {
         if (countNullMonthPlanLinks() == 0) {
             jdbcTemplate.execute("ALTER TABLE weekplan_table ALTER COLUMN month_plan_id SET NOT NULL");
         }
+    }
+
+    private void dropLegacyStudentMarkWeekNumberColumn() {
+        if (!columnExists("student_marks", "week_number")) {
+            return;
+        }
+
+        jdbcTemplate.execute("ALTER TABLE student_marks DROP COLUMN IF EXISTS week_number");
     }
 
     private BatchRow resolveBatchForWeekRow(WeekRow weekRow, Map<Long, BatchRow> batchesById) {

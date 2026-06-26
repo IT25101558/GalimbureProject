@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class StudentMonthPaymentService {
@@ -34,6 +35,33 @@ public class StudentMonthPaymentService {
     @Transactional(readOnly = true)
     public List<StudentMonthPayment> getPaymentsForMonth(Long monthPlanId) {
         return studentMonthPaymentRepository.findAllByMonthPlan_IdOrderByStudent_FullNameAsc(monthPlanId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentMonthPayment> getPaymentsForStudent(Long studentId) {
+        if (studentId == null) {
+            return List.of();
+        }
+
+        return studentMonthPaymentRepository.findAllByStudent_IdOrderByHierarchyDesc(studentId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<StudentMonthPayment> getLatestPaymentForStudent(Long studentId) {
+        if (studentId == null) {
+            return Optional.empty();
+        }
+
+        return getPaymentsForStudent(studentId)
+                .stream()
+                .findFirst();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isStudentPaidForLatestMonth(Long studentId) {
+        return getLatestPaymentForStudent(studentId)
+                .map(StudentMonthPayment::isPaidStatus)
+                .orElse(false);
     }
 
     @Transactional

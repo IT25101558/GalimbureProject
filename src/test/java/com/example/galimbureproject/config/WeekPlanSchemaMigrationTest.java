@@ -43,5 +43,6 @@ class WeekPlanSchemaMigrationTest {
         verify(jdbcTemplate).execute("ALTER TABLE weekplan_table DROP CONSTRAINT IF EXISTS uk_weekplan_table_week_number");
         verify(jdbcTemplate).execute("ALTER TABLE weekplan_table DROP CONSTRAINT IF EXISTS uk_weekplan_table_batch_week_number");
         verify(jdbcTemplate).execute("ALTER TABLE student_marks DROP CONSTRAINT IF EXISTS uk_student_marks_student_week");
+        verify(jdbcTemplate).execute("ALTER TABLE student_marks DROP COLUMN IF EXISTS week_number");
     }
 }

@@ -34,6 +34,16 @@ public interface MonthPlanRepository extends JpaRepository<MonthPlan, Long> {
             from MonthPlan monthPlan
             join fetch monthPlan.yearPlan yearPlan
             join fetch yearPlan.batch
+            where yearPlan.batch.id = :batchId
+            order by yearPlan.yearValue asc, monthPlan.monthNumber asc
+            """)
+    List<MonthPlan> findAllByBatch_IdOrderByYearPlan_YearValueAscMonthNumberAsc(@Param("batchId") Long batchId);
+
+    @Query("""
+            select monthPlan
+            from MonthPlan monthPlan
+            join fetch monthPlan.yearPlan yearPlan
+            join fetch yearPlan.batch
             where monthPlan.id = :id
             """)
     Optional<MonthPlan> findByIdWithHierarchy(@Param("id") Long id);

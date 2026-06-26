@@ -41,6 +41,15 @@ public class MonthPlanService {
     }
 
     @Transactional(readOnly = true)
+    public List<MonthPlan> getMonthsForBatch(Long batchId) {
+        if (batchId == null) {
+            return List.of();
+        }
+
+        return monthPlanRepository.findAllByBatch_IdOrderByYearPlan_YearValueAscMonthNumberAsc(batchId);
+    }
+
+    @Transactional(readOnly = true)
     public Optional<MonthPlan> findById(Long id) {
         return monthPlanRepository.findByIdWithHierarchy(id);
     }

@@ -342,15 +342,53 @@
             background: rgba(255, 255, 255, 0.5);
         }
 
-        .marks-table table {
-            min-width: 560px;
-        }
-
         .chart-caption {
             margin: 0;
             color: var(--muted);
             font-family: "Segoe UI", Verdana, sans-serif;
             line-height: 1.5;
+        }
+
+        .month-toolbar {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .month-filter-form {
+            min-width: min(320px, 100%);
+        }
+
+        .month-filter-form .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .month-filter-form label {
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        select {
+            width: 100%;
+            min-width: 260px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--ink);
+            font: 0.95rem "Segoe UI", Verdana, sans-serif;
+            padding: 10px 12px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(13, 107, 99, 0.14);
         }
 
         .metric-pill {
@@ -363,6 +401,106 @@
             background: rgba(255, 255, 255, 0.8);
             font-family: "Segoe UI", Verdana, sans-serif;
             font-weight: 700;
+        }
+
+        .metric-pill.paid {
+            background: rgba(20, 108, 67, 0.12);
+            border-color: rgba(20, 108, 67, 0.24);
+            color: var(--success);
+        }
+
+        .metric-pill.unpaid {
+            background: rgba(180, 35, 24, 0.08);
+            border-color: rgba(180, 35, 24, 0.16);
+            color: var(--ink);
+        }
+
+        .mark-summary {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .mark-stat {
+            padding: 18px;
+            border-radius: 10px;
+            background: var(--soft);
+            border: 1px solid rgba(19, 33, 38, 0.08);
+        }
+
+        .mark-stat span {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .mark-stat strong {
+            display: block;
+            font-size: 1.3rem;
+            line-height: 1.2;
+        }
+
+        .mark-stat p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.5;
+        }
+
+        .payment-banner {
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(180, 35, 24, 0.16);
+            background: rgba(180, 35, 24, 0.08);
+            color: var(--ink);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.6;
+        }
+
+        .selection-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(19, 33, 38, 0.12);
+            background: rgba(255, 255, 255, 0.8);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            font-weight: 700;
+        }
+
+        .comment-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .comment-card {
+            padding: 18px;
+            border-radius: 10px;
+            background: var(--soft);
+            border: 1px solid rgba(19, 33, 38, 0.08);
+            font-family: "Segoe UI", Verdana, sans-serif;
+            line-height: 1.55;
+        }
+
+        .comment-card span {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .comment-card strong {
+            display: block;
+            font-size: 1rem;
+            line-height: 1.45;
         }
 
         @keyframes lift {
@@ -398,6 +536,18 @@
                 grid-template-columns: 1fr;
             }
 
+            .mark-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .comment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .month-toolbar {
+                align-items: flex-start;
+            }
+
             .topbar,
             .hero-copy,
             .details .panel,
@@ -419,6 +569,8 @@
 
             <nav class="main-menu" aria-label="Main menu">
                 <a class="menu-link active" th:href="@{/dashboard}">Dashboard</a>
+                <a class="menu-link" th:if="${!isAdmin}" th:href="@{/change-profile-info}">Profile info</a>
+                <a class="menu-link" th:if="${!isAdmin}" th:href="@{/change-password}">Password</a>
                 <a class="menu-link" th:href="@{/about-us}">About us</a>
                 <a class="menu-link" th:href="@{/contact-us}">Contact us</a>
                 <a class="menu-link" th:if="${isAdmin}" th:href="@{/admin-dashboard}">Admin dashboard</a>
@@ -500,7 +652,7 @@
                     This page is protected. Any unauthenticated visit will be sent back to the login page, and new registrations are automatically signed in before coming here.
                 </div>
                 <div class="note">
-                    If you want profile editing or admin features next, this dashboard is the right place to add them.
+                    Account data shown here is read from the database and refreshed on each login.
                 </div>
                 <div class="note" th:if="${isAdmin}">
                     This account has administrator access and can manage user roles from the admin dashboard.
@@ -512,50 +664,78 @@
             <div class="marks-header">
                 <div>
                     <h3 class="section-title">Weekly marks</h3>
-                    <p class="chart-caption">Weeks are shown horizontally and marks are shown vertically.</p>
+                    <p class="chart-caption" th:if="${marksUnlocked}">
+                        Weeks are shown horizontally and marks are shown vertically for the selected month.
+                    </p>
+                    <p class="chart-caption"
+                       th:unless="${marksUnlocked}"
+                       th:text="${paymentContextLabel != null ? 'Marks are hidden until ' + paymentContextLabel + ' is marked as paid.' : 'Select a month to view marks.'}">
+                        Select a month to view marks.
+                    </p>
                 </div>
-                <div class="metric-pill">
-                    <span>Entries</span>
-                    <strong th:text="${studentMarks.size()}">0</strong>
+                <div class="metric-pill" th:classappend="${marksUnlocked} ? ' paid' : ' unpaid'">
+                    <span>Payment</span>
+                    <strong th:text="${paymentStatusLabel}">Waiting for payment</strong>
                 </div>
             </div>
 
-            <div class="marks-layout" th:if="${hasMarks}">
+            <div class="month-toolbar">
+                <form class="month-filter-form" th:action="@{/dashboard}" method="get">
+                    <div class="field">
+                        <label for="monthPlanFilter">Month</label>
+                        <select id="monthPlanFilter" name="monthPlanId" onchange="this.form.submit()" th:disabled="${#lists.isEmpty(monthPlans)}">
+                            <option value="" th:if="${#lists.isEmpty(monthPlans)}">No months available</option>
+                            <option th:each="month : ${monthPlans}"
+                                    th:value="${month.id}"
+                                    th:selected="${selectedMonthPlanId != null and month.id.equals(selectedMonthPlanId)}"
+                                    th:text="${(month.yearValue != null ? month.yearValue + ' / ' + month.monthLabel : month.monthLabel) + (paidMonthIds.contains(month.id) ? ' - Paid' : ' - Waiting')}">2026 / January - Paid</option>
+                        </select>
+                    </div>
+                </form>
+
+                <div class="selection-pill" th:if="${selectedMonthPlan != null}">
+                    <span>Selected</span>
+                    <strong th:text="${selectedMonthPlan.monthLabel}">January</strong>
+                </div>
+            </div>
+
+            <div class="payment-banner" th:if="${!marksUnlocked}"
+                 th:text="${paymentContextLabel != null ? 'Waiting for payment for ' + paymentContextLabel + '. Marks stay hidden until that month is marked as paid.' : 'Select a month to view its payment status.'}">
+                Select a month to view its payment status.
+            </div>
+
+            <div class="mark-summary" th:if="${marksUnlocked and hasMarks}">
+                <div class="mark-stat">
+                    <span>Latest mark</span>
+                    <strong th:text="${latestMark != null ? latestMark.mark : '-'}">0</strong>
+                    <p th:text="${latestMark != null ? selectedMonthPlan.monthLabel + ' W' + (latestMark.weekNumber != null ? latestMark.weekNumber : '-') : '-'}">January W1</p>
+                </div>
+                <div class="mark-stat">
+                    <span>Highest mark</span>
+                    <strong th:text="${highestMark != null ? highestMark.mark : '-'}">0</strong>
+                    <p th:text="${highestMark != null ? selectedMonthPlan.monthLabel + ' W' + (highestMark.weekNumber != null ? highestMark.weekNumber : '-') : '-'}">January W1</p>
+                </div>
+            </div>
+
+            <div class="marks-layout" th:if="${marksUnlocked and hasMarks}">
                 <div class="chart-shell" aria-label="Weekly mark chart">
                     <svg id="marks-chart" viewBox="0 0 900 360" role="img" aria-label="Weekly marks line chart"></svg>
                 </div>
             </div>
 
-            <div class="chart-empty" th:if="${!hasMarks}">
-                No marks have been recorded yet.
+            <div class="comment-grid" th:if="${marksUnlocked and hasMarks}">
+                <div class="comment-card">
+                    <span>Graph behaviour</span>
+                    <strong th:text="${graphBehaviourComment}">The graph has gradually increased and looks good.</strong>
+                </div>
+                <div class="comment-card">
+                    <span>Motivation</span>
+                    <strong th:text="${motivationComment}">Good improvement. Keep working hard.</strong>
+                </div>
             </div>
 
-            <div class="table-wrap marks-table">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Batch</th>
-                        <th>Year</th>
-                        <th>Month</th>
-                        <th>Week</th>
-                        <th>Mark</th>
-                        <th>Saved</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="mark : ${studentMarks}">
-                        <td th:text="${mark.weekPlan != null and mark.weekPlan.batch != null ? 'Batch ' + mark.weekPlan.batch.batchYear : 'Batch -'}">Batch 2026</td>
-                        <td th:text="${mark.weekPlan != null and mark.weekPlan.yearValue != null ? mark.weekPlan.yearValue : '-'}">2026</td>
-                        <td th:text="${mark.weekPlan != null ? mark.weekPlan.monthLabel : '-'}">January</td>
-                        <td th:text="${mark.weekNumber}">1</td>
-                        <td th:text="${mark.mark}">80</td>
-                        <td th:text="${#temporals.format(mark.updatedAt != null ? mark.updatedAt : mark.createdAt, 'dd MMM yyyy')}">01 Jan 2026</td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(studentMarks)}">
-                        <td colspan="6" class="muted">No marks available.</td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="chart-empty" th:if="${marksUnlocked and !hasMarks}">
+                No marks have been recorded yet for this month.
             </div>
         </section>
     </section>

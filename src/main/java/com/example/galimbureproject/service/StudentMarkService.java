@@ -38,6 +38,15 @@ public class StudentMarkService {
     }
 
     @Transactional(readOnly = true)
+    public List<StudentMark> getMarksForStudentAndMonth(Long studentId, Long monthPlanId) {
+        if (studentId == null || monthPlanId == null) {
+            return List.of();
+        }
+
+        return studentMarkRepository.findForStudentAndMonthOrdered(studentId, monthPlanId);
+    }
+
+    @Transactional(readOnly = true)
     public List<StudentMark> getMarksForWeekPlan(Long weekPlanId) {
         return studentMarkRepository.findByWeekPlanIdOrderedWithStudent(weekPlanId);
     }

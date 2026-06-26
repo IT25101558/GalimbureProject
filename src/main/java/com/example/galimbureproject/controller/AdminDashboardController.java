@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,8 +72,11 @@ public class AdminDashboardController {
     }
 
     @GetMapping({"/admin-dashboard", "/admin_dashboard"})
-    public String showAdminDashboard(Model model) {
-        populateAdminDashboardModel(model);
+    public String showAdminDashboard(
+            @RequestParam(value = "yearBatchId", required = false) Long yearBatchId,
+            Model model
+    ) {
+        populateAdminDashboardModel(model, yearBatchId);
         return "admin-dashboard";
     }
 
@@ -108,7 +112,7 @@ public class AdminDashboardController {
     ) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("errorMessage", "Check the highlighted batch fields and try again.");
-            populateAdminDashboardModel(model);
+            populateAdminDashboardModel(model, null);
             model.addAttribute("batchForm", batchForm);
             return "admin-dashboard";
         }
@@ -119,10 +123,10 @@ public class AdminDashboardController {
                     "successMessage",
                     "Batch " + savedBatch.getCompactLabel() + " was created with two years."
             );
-            return "redirect:/admin-dashboard";
+            return "redirect:/admin-dashboard?yearBatchId=" + savedBatch.getId();
         } catch (IllegalArgumentException exception) {
             model.addAttribute("errorMessage", exception.getMessage());
-            populateAdminDashboardModel(model);
+            populateAdminDashboardModel(model, null);
             model.addAttribute("batchForm", batchForm);
             return "admin-dashboard";
         }
@@ -137,7 +141,7 @@ public class AdminDashboardController {
     ) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("errorMessage", "Check the highlighted year fields and try again.");
-            populateAdminDashboardModel(model);
+            populateAdminDashboardModel(model, yearPlanForm.getBatchId());
             model.addAttribute("yearPlanForm", yearPlanForm);
             return "admin-dashboard";
         }
@@ -149,10 +153,10 @@ public class AdminDashboardController {
                     "Year " + savedYear.getYearValue() + " was created for batch "
                             + savedYear.getBatch().getCompactLabel() + "."
             );
-            return "redirect:/admin-dashboard";
+            return "redirect:/admin-dashboard?yearBatchId=" + savedYear.getBatch().getId();
         } catch (IllegalArgumentException exception) {
             model.addAttribute("errorMessage", exception.getMessage());
-            populateAdminDashboardModel(model);
+            populateAdminDashboardModel(model, yearPlanForm.getBatchId());
             model.addAttribute("yearPlanForm", yearPlanForm);
             return "admin-dashboard";
         }
@@ -287,11 +291,21 @@ public class AdminDashboardController {
     }
 
     private void populateAdminDashboardModel(Model model) {
+        populateAdminDashboardModel(model, null);
+    }
+
+    private void populateAdminDashboardModel(Model model, Long selectedYearBatchId) {
         List<RegisteredUser> users = registeredUserRepository.findAllByOrderByCreatedAtDesc();
         List<Batch> batches = batchService.getAllBatches();
+        Batch selectedYearBatch = selectedYearBatchId == null
+                ? null
+                : batchService.findById(selectedYearBatchId).orElse(null);
         long yearCount = yearPlanService.countAllYears();
         long monthCount = monthPlanService.countAllMonthPlans();
         long weekCount = weekPlanService.countAllWeekPlans();
+        List<YearPlan> yearPlans = selectedYearBatch == null
+                ? yearPlanService.getAllYears()
+                : yearPlanService.getYearsForBatch(selectedYearBatch.getId());
 
         model.addAttribute("users", users);
         model.addAttribute("batches", batches);
@@ -302,13 +316,16 @@ public class AdminDashboardController {
         model.addAttribute("totalUsers", users.size());
         model.addAttribute("adminUsers", users.stream().filter(this::isAdmin).count());
         model.addAttribute("studentUsers", users.stream().filter(user -> !isAdmin(user)).count());
+        model.addAttribute("yearPlans", yearPlans);
+        model.addAttribute("selectedYearBatch", selectedYearBatch);
+        model.addAttribute("selectedYearBatchId", selectedYearBatch != null ? selectedYearBatch.getId() : null);
 
         if (!model.containsAttribute("batchForm")) {
             model.addAttribute("batchForm", new BatchForm());
         }
 
         if (!model.containsAttribute("yearPlanForm")) {
-            model.addAttribute("yearPlanForm", buildYearPlanForm(batches));
+            model.addAttribute("yearPlanForm", buildYearPlanForm(batches, selectedYearBatchId));
         }
     }
 
@@ -428,10 +445,10 @@ public class AdminDashboardController {
             return batches.stream()
                     .filter(batch -> batch.getId().equals(requestedBatchId))
                     .findFirst()
-                    .orElse(batches.get(0));
+                    .orElseGet(() -> selectNearestBatch(batches));
         }
 
-        return batches.get(0);
+        return selectNearestBatch(batches);
     }
 
     private YearPlan resolveSelectedYearPlan(List<YearPlan> yearPlans, Long requestedYearPlanId) {
@@ -443,10 +460,10 @@ public class AdminDashboardController {
             return yearPlans.stream()
                     .filter(yearPlan -> yearPlan.getId().equals(requestedYearPlanId))
                     .findFirst()
-                    .orElse(yearPlans.get(0));
+                    .orElseGet(() -> selectNearestYearPlan(yearPlans));
         }
 
-        return yearPlans.get(0);
+        return selectNearestYearPlan(yearPlans);
     }
 
     private MonthPlan resolveSelectedMonthPlan(List<MonthPlan> monthPlans, Long requestedMonthPlanId) {
@@ -458,10 +475,10 @@ public class AdminDashboardController {
             return monthPlans.stream()
                     .filter(monthPlan -> monthPlan.getId().equals(requestedMonthPlanId))
                     .findFirst()
-                    .orElse(monthPlans.get(0));
+                    .orElseGet(() -> selectNearestMonthPlan(monthPlans));
         }
 
-        return monthPlans.get(0);
+        return selectNearestMonthPlan(monthPlans);
     }
 
     private WeekPlan resolveSelectedWeekPlan(List<WeekPlan> weekPlans, Long requestedWeekPlanId) {
@@ -479,12 +496,23 @@ public class AdminDashboardController {
         return weekPlans.get(0);
     }
 
-    private YearPlanForm buildYearPlanForm(List<Batch> batches) {
+    private YearPlanForm buildYearPlanForm(List<Batch> batches, Long selectedYearBatchId) {
         YearPlanForm form = new YearPlanForm();
-        if (!batches.isEmpty()) {
-            Batch firstBatch = batches.get(0);
-            form.setBatchId(firstBatch.getId());
-            Integer baseYear = firstBatch.getBatchYear();
+        Batch selectedBatch = null;
+        if (selectedYearBatchId != null) {
+            selectedBatch = batches.stream()
+                    .filter(batch -> batch.getId().equals(selectedYearBatchId))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        if (selectedBatch == null && !batches.isEmpty()) {
+            selectedBatch = batches.get(0);
+        }
+
+        if (selectedBatch != null) {
+            form.setBatchId(selectedBatch.getId());
+            Integer baseYear = selectedBatch.getBatchYear();
             form.setYearValue(baseYear == null ? LocalDate.now().getYear() : baseYear + 2);
         } else {
             form.setYearValue(LocalDate.now().getYear());
@@ -548,6 +576,33 @@ public class AdminDashboardController {
 
         form.setEntries(entries);
         return form;
+    }
+
+    private Batch selectNearestBatch(List<Batch> batches) {
+        int currentYear = LocalDate.now().getYear();
+        return batches.stream()
+                .filter(batch -> batch.getBatchYear() != null)
+                .min(Comparator.comparingInt((Batch batch) -> Math.abs(batch.getBatchYear() - currentYear))
+                        .thenComparing(Batch::getBatchYear))
+                .orElse(batches.get(0));
+    }
+
+    private YearPlan selectNearestYearPlan(List<YearPlan> yearPlans) {
+        int currentYear = LocalDate.now().getYear();
+        return yearPlans.stream()
+                .filter(yearPlan -> yearPlan.getYearValue() != null)
+                .min(Comparator.comparingInt((YearPlan yearPlan) -> Math.abs(yearPlan.getYearValue() - currentYear))
+                        .thenComparing(YearPlan::getYearValue))
+                .orElse(yearPlans.get(0));
+    }
+
+    private MonthPlan selectNearestMonthPlan(List<MonthPlan> monthPlans) {
+        int currentMonth = LocalDate.now().getMonthValue();
+        return monthPlans.stream()
+                .filter(monthPlan -> monthPlan.getMonthNumber() != null)
+                .min(Comparator.comparingInt((MonthPlan monthPlan) -> Math.abs(monthPlan.getMonthNumber() - currentMonth))
+                        .thenComparing(MonthPlan::getMonthNumber))
+                .orElse(monthPlans.get(0));
     }
 
     private boolean isAdmin(RegisteredUser user) {

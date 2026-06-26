@@ -31,6 +31,23 @@ public interface StudentMarkRepository extends JpaRepository<StudentMark, Long> 
             join fetch weekPlan.monthPlan monthPlan
             join fetch monthPlan.yearPlan yearPlan
             join fetch yearPlan.batch
+            where mark.student.id = :studentId
+              and monthPlan.id = :monthPlanId
+            order by weekPlan.weekNumber asc
+            """)
+    List<StudentMark> findForStudentAndMonthOrdered(
+            @Param("studentId") Long studentId,
+            @Param("monthPlanId") Long monthPlanId
+    );
+
+    @Query("""
+            select mark
+            from StudentMark mark
+            join fetch mark.student
+            join fetch mark.weekPlan weekPlan
+            join fetch weekPlan.monthPlan monthPlan
+            join fetch monthPlan.yearPlan yearPlan
+            join fetch yearPlan.batch
             where weekPlan.id = :weekPlanId
             order by mark.student.fullName asc
             """)

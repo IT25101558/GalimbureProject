@@ -22,5 +22,17 @@ public interface StudentMonthPaymentRepository extends JpaRepository<StudentMont
             """)
     List<StudentMonthPayment> findAllByMonthPlan_IdOrderByStudent_FullNameAsc(@Param("monthPlanId") Long monthPlanId);
 
+    @Query("""
+            select payment
+            from StudentMonthPayment payment
+            join fetch payment.student student
+            join fetch payment.monthPlan monthPlan
+            join fetch monthPlan.yearPlan yearPlan
+            join fetch yearPlan.batch
+            where student.id = :studentId
+            order by yearPlan.batch.batchYear desc, yearPlan.yearValue desc, monthPlan.monthNumber desc
+            """)
+    List<StudentMonthPayment> findAllByStudent_IdOrderByHierarchyDesc(@Param("studentId") Long studentId);
+
     Optional<StudentMonthPayment> findByStudent_IdAndMonthPlan_Id(Long studentId, Long monthPlanId);
 }
